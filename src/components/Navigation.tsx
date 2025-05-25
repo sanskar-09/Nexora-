@@ -9,32 +9,82 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
-import { SidebarTrigger } from "@/components/ui/sidebar";
+import { 
+  LayoutDashboard, 
+  Stethoscope, 
+  Pill, 
+  Activity, 
+  User,
+  Heart
+} from "lucide-react";
 
 interface NavigationProps {
   onAuthChange: (isAuth: boolean) => void;
   isAuthenticated?: boolean;
+  activeTab?: string;
+  onTabChange?: (tab: string) => void;
 }
 
-const Navigation = ({ onAuthChange, isAuthenticated = false }: NavigationProps) => {
+const menuItems = [
+  {
+    id: 'dashboard',
+    title: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    id: 'symptoms',
+    title: "Symptom Checker",
+    icon: Stethoscope,
+  },
+  {
+    id: 'medications',
+    title: "Medications",
+    icon: Pill,
+  },
+  {
+    id: 'monitoring',
+    title: "Health Monitoring",
+    icon: Activity,
+  },
+  {
+    id: 'profile',
+    title: "Profile",
+    icon: User,
+  },
+];
+
+const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabChange }: NavigationProps) => {
   return (
-    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          <div className="flex items-center space-x-4">
-            {isAuthenticated && <SidebarTrigger />}
-            {!isAuthenticated && (
-              <div className="flex items-center space-x-2">
-                <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
-                  <svg className="w-5 h-5 text-white" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M4.318 6.318a4.5 4.5 0 000 6.364L12 20.364l7.682-7.682a4.5 4.5 0 00-6.364-6.364L12 7.636l-1.318-1.318a4.5 4.5 0 00-6.364 0z" />
-                  </svg>
-                </div>
-                <span className="text-xl font-bold text-gray-900">Nexora</span>
-              </div>
-            )}
+          {/* Logo */}
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Heart className="w-5 h-5 text-white" />
+            </div>
+            <span className="text-xl font-bold text-gray-900">Nexora</span>
           </div>
 
+          {/* Navigation Menu - Only show when authenticated */}
+          {isAuthenticated && onTabChange && (
+            <div className="hidden md:flex items-center space-x-1">
+              {menuItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={activeTab === item.id ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => onTabChange(item.id)}
+                  className="flex items-center space-x-2"
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.title}</span>
+                </Button>
+              ))}
+            </div>
+          )}
+
+          {/* User Actions */}
           <div className="flex items-center space-x-4">
             {isAuthenticated ? (
               <>
