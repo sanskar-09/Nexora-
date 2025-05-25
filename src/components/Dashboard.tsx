@@ -12,12 +12,35 @@ const Dashboard = ({ userRole }: DashboardProps) => {
   const healthScore = 85;
   const upcomingAppointments = [
     { id: 1, doctor: "Dr. Sarah Johnson", specialty: "Cardiology", date: "2024-01-15", time: "10:00 AM" },
-    { id: 2, doctor: "Dr. Michael Chen", specialty: "General Medicine", date: "2024-01-20", time: "2:30 PM" }
+    { id: 2, doctor: "Dr. Michael Chen", specialty: "General Medicine", date: "2024-01-20", time: "2:30 PM" },
+    { id: 3, doctor: "Dr. Emily Rodriguez", specialty: "Dermatology", date: "2024-01-22", time: "11:15 AM" },
+    { id: 4, doctor: "Dr. James Wilson", specialty: "Orthopedics", date: "2024-01-25", time: "3:45 PM" },
+    { id: 5, doctor: "Dr. Lisa Thompson", specialty: "Endocrinology", date: "2024-02-02", time: "9:30 AM" }
   ];
 
   const recentMedications = [
     { id: 1, name: "Lisinopril", dosage: "10mg", nextDose: "Today, 8:00 PM", status: "on-time" },
-    { id: 2, name: "Metformin", dosage: "500mg", nextDose: "Tomorrow, 9:00 AM", status: "upcoming" }
+    { id: 2, name: "Metformin", dosage: "500mg", nextDose: "Tomorrow, 9:00 AM", status: "upcoming" },
+    { id: 3, name: "Atorvastatin", dosage: "20mg", nextDose: "Today, 10:00 PM", status: "on-time" },
+    { id: 4, name: "Vitamin D3", dosage: "2000 IU", nextDose: "Tomorrow, 8:00 AM", status: "upcoming" },
+    { id: 5, name: "Omega-3", dosage: "1000mg", nextDose: "Today, 6:00 PM", status: "missed" }
+  ];
+
+  const healthMetrics = [
+    { label: "Blood Pressure", value: "120/80", unit: "mmHg", status: "normal", trend: "stable" },
+    { label: "Heart Rate", value: "72", unit: "BPM", status: "normal", trend: "improving" },
+    { label: "Weight", value: "165", unit: "lbs", status: "normal", trend: "decreasing" },
+    { label: "Blood Sugar", value: "95", unit: "mg/dL", status: "normal", trend: "stable" },
+    { label: "Steps Today", value: "8,750", unit: "steps", status: "good", trend: "increasing" },
+    { label: "Sleep Quality", value: "7.8", unit: "/10", status: "good", trend: "stable" }
+  ];
+
+  const recentActivities = [
+    { id: 1, type: "medication", description: "Took Lisinopril 10mg", time: "2 hours ago" },
+    { id: 2, type: "vitals", description: "Logged blood pressure reading", time: "4 hours ago" },
+    { id: 3, type: "exercise", description: "Completed 30-minute walk", time: "6 hours ago" },
+    { id: 4, type: "appointment", description: "Visited Dr. Johnson for check-up", time: "Yesterday" },
+    { id: 5, type: "medication", description: "Refilled Metformin prescription", time: "2 days ago" }
   ];
 
   return (
@@ -60,6 +83,43 @@ const Dashboard = ({ userRole }: DashboardProps) => {
         </CardContent>
       </Card>
 
+      {/* Health Metrics Grid */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Health Metrics</CardTitle>
+          <CardDescription>Your latest health measurements</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
+            {healthMetrics.map((metric, index) => (
+              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+                <div className="flex items-center justify-between mb-1">
+                  <p className="text-sm text-gray-600">{metric.label}</p>
+                  <span className={`text-xs px-2 py-1 rounded-full ${
+                    metric.status === 'normal' || metric.status === 'good' ? 'bg-green-100 text-green-800' :
+                    metric.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
+                    'bg-red-100 text-red-800'
+                  }`}>
+                    {metric.status}
+                  </span>
+                </div>
+                <p className="text-lg font-bold">{metric.value} <span className="text-sm font-normal text-gray-500">{metric.unit}</span></p>
+                <p className={`text-xs ${
+                  metric.trend === 'improving' || metric.trend === 'increasing' ? 'text-green-600' :
+                  metric.trend === 'decreasing' ? 'text-blue-600' :
+                  'text-gray-500'
+                }`}>
+                  {metric.trend === 'improving' ? '↗ Improving' :
+                   metric.trend === 'increasing' ? '↗ Increasing' :
+                   metric.trend === 'decreasing' ? '↘ Decreasing' :
+                   '→ Stable'}
+                </p>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
+
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Upcoming Appointments */}
         <Card>
@@ -68,7 +128,7 @@ const Dashboard = ({ userRole }: DashboardProps) => {
             <CardDescription>Your scheduled medical appointments</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {upcomingAppointments.map((appointment) => (
+            {upcomingAppointments.slice(0, 3).map((appointment) => (
               <div key={appointment.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium">{appointment.doctor}</p>
@@ -78,7 +138,7 @@ const Dashboard = ({ userRole }: DashboardProps) => {
                 <Button variant="outline" size="sm">View Details</Button>
               </div>
             ))}
-            <Button className="w-full mt-4" variant="outline">Schedule New Appointment</Button>
+            <Button className="w-full mt-4" variant="outline">View All Appointments</Button>
           </CardContent>
         </Card>
 
@@ -89,7 +149,7 @@ const Dashboard = ({ userRole }: DashboardProps) => {
             <CardDescription>Your current medication schedule</CardDescription>
           </CardHeader>
           <CardContent className="space-y-4">
-            {recentMedications.map((med) => (
+            {recentMedications.slice(0, 3).map((med) => (
               <div key={med.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
                 <div>
                   <p className="font-medium">{med.name}</p>
@@ -98,9 +158,14 @@ const Dashboard = ({ userRole }: DashboardProps) => {
                 </div>
                 <Badge 
                   variant={med.status === 'on-time' ? 'default' : 'secondary'}
-                  className={med.status === 'on-time' ? 'bg-green-100 text-green-800' : ''}
+                  className={
+                    med.status === 'on-time' ? 'bg-green-100 text-green-800' :
+                    med.status === 'missed' ? 'bg-red-100 text-red-800' :
+                    'bg-blue-100 text-blue-800'
+                  }
                 >
-                  {med.status === 'on-time' ? 'On Time' : 'Upcoming'}
+                  {med.status === 'on-time' ? 'On Time' : 
+                   med.status === 'missed' ? 'Missed' : 'Upcoming'}
                 </Badge>
               </div>
             ))}
@@ -108,6 +173,46 @@ const Dashboard = ({ userRole }: DashboardProps) => {
           </CardContent>
         </Card>
       </div>
+
+      {/* Recent Activity */}
+      <Card>
+        <CardHeader>
+          <CardTitle>Recent Activity</CardTitle>
+          <CardDescription>Your latest health-related activities</CardDescription>
+        </CardHeader>
+        <CardContent>
+          <div className="space-y-3">
+            {recentActivities.map((activity) => (
+              <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+                <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                  activity.type === 'medication' ? 'bg-blue-100' :
+                  activity.type === 'vitals' ? 'bg-green-100' :
+                  activity.type === 'exercise' ? 'bg-purple-100' :
+                  'bg-yellow-100'
+                }`}>
+                  <svg className={`w-4 h-4 ${
+                    activity.type === 'medication' ? 'text-blue-600' :
+                    activity.type === 'vitals' ? 'text-green-600' :
+                    activity.type === 'exercise' ? 'text-purple-600' :
+                    'text-yellow-600'
+                  }`} fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} 
+                      d={activity.type === 'medication' ? "M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" :
+                       activity.type === 'vitals' ? "M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" :
+                       activity.type === 'exercise' ? "M13 10V3L4 14h7v7l9-11h-7z" :
+                       "M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z"}
+                    />
+                  </svg>
+                </div>
+                <div className="flex-1">
+                  <p className="text-sm font-medium">{activity.description}</p>
+                  <p className="text-xs text-gray-500">{activity.time}</p>
+                </div>
+              </div>
+            ))}
+          </div>
+        </CardContent>
+      </Card>
 
       {/* Quick Actions */}
       <Card>
