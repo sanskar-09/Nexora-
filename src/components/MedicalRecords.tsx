@@ -6,6 +6,15 @@ import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { format, parseISO } from 'date-fns';
+import { toast } from "@/components/ui/use-toast";
+import UploadRecords from './UploadRecords';
+
+interface RecordMetadata {
+  type: 'lab_result' | 'imaging' | 'visit_summary' | 'vaccination' | 'prescription';
+  title: string;
+  provider: string;
+  date: Date;
+}
 
 interface MedicalRecord {
   id: number;
@@ -199,6 +208,57 @@ const MedicalRecords = () => {
     setSelectedRecord(record);
   };
 
+  const handleFileUpload = async (file: File, metadata: RecordMetadata) => {
+    try {
+      // Here you would typically upload the file to your backend/storage
+      // For now, we'll simulate the upload with a timeout
+      await new Promise(resolve => setTimeout(resolve, 1000));
+
+      // Create a new record with the uploaded file
+      const newRecord: MedicalRecord = {
+        id: records.length + 1,
+        type: metadata.type,
+        title: metadata.title,
+        date: metadata.date,
+        provider: metadata.provider,
+        status: 'completed',
+        details: `Uploaded ${file.name}`,
+        attachmentUrl: URL.createObjectURL(file)
+      };
+
+      // Add the new record to the list
+      setRecords(prev => [newRecord, ...prev]);
+
+      toast({
+        title: "Upload successful",
+        description: "Your medical record has been uploaded successfully.",
+      });
+    } catch (error) {
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your medical record. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownload = (record: MedicalRecord) => {
+    if (record.attachmentUrl) {
+      const link = document.createElement('a');
+      link.href = record.attachmentUrl;
+      link.download = record.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+    }
+  };
+
+  const handleViewAttachment = (record: MedicalRecord) => {
+    if (record.attachmentUrl) {
+      window.open(record.attachmentUrl, '_blank');
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -206,6 +266,20 @@ const MedicalRecords = () => {
           <h1 className="text-3xl font-bold text-gray-900">Medical Records</h1>
           <p className="text-gray-600 mt-1">View and manage your health records and test results</p>
         </div>
+        <Dialog>
+          <DialogTrigger asChild>
+            <Button>Upload New Record</Button>
+          </DialogTrigger>
+          <DialogContent className="sm:max-w-[600px]">
+            <DialogHeader>
+              <DialogTitle>Upload Medical Record</DialogTitle>
+              <DialogDescription>
+                Upload your medical documents and records. Supported formats: PDF, JPEG, PNG
+              </DialogDescription>
+            </DialogHeader>
+            <UploadRecords onUpload={handleFileUpload} />
+          </DialogContent>
+        </Dialog>
       </div>
 
       <Tabs defaultValue="records" className="w-full">
@@ -265,9 +339,12 @@ const MedicalRecords = () => {
                             {record.attachmentUrl && (
                               <div>
                                 <span className="font-medium">Attachments:</span>
-                                <div className="mt-2">
-                                  <Button variant="outline" size="sm">
-                                    Download PDF
+                                <div className="mt-2 space-x-2">
+                                  <Button variant="outline" size="sm" onClick={() => handleViewAttachment(record)}>
+                                    View
+                                  </Button>
+                                  <Button variant="outline" size="sm" onClick={() => handleDownload(record)}>
+                                    Download
                                   </Button>
                                 </div>
                               </div>

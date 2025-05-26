@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Navigation from '@/components/Navigation';
 import Dashboard from '@/components/Dashboard';
 import SymptomChecker from '@/components/SymptomChecker';
@@ -9,8 +9,8 @@ import Telemedicine from '@/components/Telemedicine';
 import HealthEducation from '@/components/HealthEducation';
 
 const Index = () => {
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [activeTab, setActiveTab] = useState('telemedicine');
+  const [isAuthenticated, setIsAuthenticated] = useState(true); // Set to true for testing
   const [userRole, setUserRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
 
   const renderContent = () => {
@@ -30,7 +30,7 @@ const Index = () => {
       case 'profile':
         return <UserProfile userRole={userRole} />;
       default:
-        return <Dashboard userRole={userRole} />;
+        return <Telemedicine />;
     }
   };
 
