@@ -5,6 +5,8 @@ import SymptomChecker from '@/components/SymptomChecker';
 import MedicationManager from '@/components/MedicationManager';
 import HealthMonitoring from '@/components/HealthMonitoring';
 import UserProfile from '@/components/UserProfile';
+import Telemedicine from '@/components/Telemedicine';
+import HealthEducation from '@/components/HealthEducation';
 
 const Index = () => {
   const [activeTab, setActiveTab] = useState('dashboard');
@@ -21,6 +23,10 @@ const Index = () => {
         return <MedicationManager />;
       case 'monitoring':
         return <HealthMonitoring />;
+      case 'education':
+        return <HealthEducation />;
+      case 'telemedicine':
+        return <Telemedicine />;
       case 'profile':
         return <UserProfile userRole={userRole} />;
       default:

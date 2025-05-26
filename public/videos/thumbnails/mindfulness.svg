@@ -1,0 +1,9 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#F5F3FF"/>
+  <rect x="440" y="160" width="400" height="400" rx="20" fill="#EDE9FE"/>
+  <circle cx="650" cy="320" r="120" fill="#8B5CF6" fill-opacity="0.1" stroke="#8B5CF6" stroke-width="8"/>
+  <path d="M590 320H710" stroke="#8B5CF6" stroke-width="8" stroke-linecap="round"/>
+  <path d="M650 260V380" stroke="#8B5CF6" stroke-width="8" stroke-linecap="round"/>
+  <circle cx="650" cy="320" r="40" fill="#8B5CF6" fill-opacity="0.2" stroke="#8B5CF6" stroke-width="4"/>
+  <text x="640" y="560" font-family="Arial" font-size="24" text-anchor="middle" fill="#5B21B6">Mindfulness Meditation</text>
+</svg>

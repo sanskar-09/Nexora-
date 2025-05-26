@@ -18,7 +18,8 @@ import {
   Pill, 
   Activity, 
   User,
-  Heart
+  Heart,
+  Video
 } from "lucide-react";
 
 interface AppSidebarProps {
@@ -50,6 +51,12 @@ const menuItems = [
     title: "Health Monitoring",
     icon: Activity,
     description: "Track vital signs"
+  },
+  {
+    id: 'telemedicine',
+    title: "Telemedicine",
+    icon: Video,
+    description: "Virtual doctor consultations"
   },
   {
     id: 'profile',

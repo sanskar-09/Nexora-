@@ -15,7 +15,9 @@ import {
   Pill, 
   Activity, 
   User,
-  Heart
+  Heart,
+  Video,
+  BookOpen
 } from "lucide-react";
 
 interface NavigationProps {
@@ -45,6 +47,16 @@ const menuItems = [
     id: 'monitoring',
     title: "Health Monitoring",
     icon: Activity,
+  },
+  {
+    id: 'education',
+    title: "Health Education",
+    icon: BookOpen,
+  },
+  {
+    id: 'telemedicine',
+    title: "Telemedicine",
+    icon: Video,
   },
   {
     id: 'profile',
