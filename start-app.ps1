@@ -13,7 +13,7 @@ try {
 # Run the application using concurrently
 Write-Host "Starting frontend and backend servers..." -ForegroundColor Yellow
 Write-Host "Frontend will be available at: http://localhost:5173" -ForegroundColor Green
-Write-Host "Backend API will be available at: http://localhost:5000" -ForegroundColor Green
+Write-Host "Backend API will be available at: http://localhost:5001" -ForegroundColor Green
 Write-Host "Press Ctrl+C to stop both servers" -ForegroundColor Yellow
 
 # Run the dev:full script

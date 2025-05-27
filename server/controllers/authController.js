@@ -4,11 +4,11 @@ import crypto from 'crypto';
 import mockDb from '../config/mockDb.js';
 
 // Flag to determine if we're using mock database
-const useMockDb = import.meta.env.VITE_USE_MOCK_DB === 'true' || false;
+const useMockDb = process.env.USE_MOCK_DB === 'true' || false;
 
 // Generate JWT token
 const generateToken = (id) => {
-  return jwt.sign({ id }, import.meta.env.VITE_JWT_SECRET || 'your_jwt_secret', {
+  return jwt.sign({ id }, process.env.JWT_SECRET || 'your_jwt_secret', {
     expiresIn: '30d',
   });
 };
@@ -19,20 +19,56 @@ const generateToken = (id) => {
 export const register = async (req, res) => {
   try {
     const { name, email, password, role } = req.body;
-
-    // Check if user already exists
-    const userExists = await User.findOne({ email });
-    if (userExists) {
-      return res.status(400).json({ message: 'User already exists' });
+    
+    // For development/demo purposes - handle demo account creation
+    if (email.includes('demo@example') && password === 'password') {
+      console.log('Creating demo account:', email);
+      
+      const mockUser = {
+        _id: 'demo_user_' + Date.now(),
+        name: name || 'Demo User',
+        email: email,
+        role: role || 'patient',
+      };
+      
+      return res.status(201).json({
+        ...mockUser,
+        token: generateToken(mockUser._id),
+      });
     }
 
-    // Create new user
-    const user = await User.create({
-      name,
-      email,
-      password,
-      role: role || 'patient',
-    });
+    // Check if user already exists
+    let userExists;
+    let user;
+    
+    if (useMockDb) {
+      userExists = mockDb.findUserByEmail(email);
+      if (userExists) {
+        return res.status(400).json({ message: 'User already exists' });
+      }
+      
+      // Create new user in mock DB
+      user = mockDb.createUser({
+        name,
+        email,
+        password, // Note: In a real app, you'd hash this password
+        role: role || 'patient',
+      });
+    } else {
+      // Check if user already exists in MongoDB
+      userExists = await User.findOne({ email });
+      if (userExists) {
+        return res.status(400).json({ message: 'User already exists' });
+      }
+
+      // Create new user in MongoDB
+      user = await User.create({
+        name,
+        email,
+        password,
+        role: role || 'patient',
+      });
+    }
 
     if (user) {
       res.status(201).json({
@@ -59,13 +95,15 @@ export const login = async (req, res) => {
     const { email, password } = req.body;
 
     // For development/demo purposes - allow login with mock credentials
-    if (email === 'demo@example.com' && password === 'password') {
+    if (email.includes('demo@example.com') && password === 'password') {
       const mockUser = {
-        _id: 'demo_user',
+        _id: 'demo_user_' + Date.now(),
         name: 'Demo User',
-        email: 'demo@example.com',
+        email: email,
         role: 'patient',
       };
+      
+      console.log('Demo login successful:', mockUser.email);
       
       return res.json({
         ...mockUser,
@@ -216,5 +254,29 @@ export const resetPassword = async (req, res) => {
   } catch (error) {
     console.error('Reset password error:', error);
     res.status(500).json({ message: 'Server error', error: error.message });
+  }
+};
+
+// @desc    Google OAuth callback
+// @route   GET /api/auth/google/callback
+// @access  Public
+export const googleCallback = async (req, res) => {
+  try {
+    // Passport has already authenticated the user and attached it to req.user
+    const user = req.user;
+    
+    if (!user) {
+      return res.status(400).json({ message: 'Google authentication failed' });
+    }
+    
+    // Generate JWT token
+    const token = generateToken(user._id);
+    
+    // Redirect to frontend with token
+    // In a production app, you'd use a more secure method to pass the token
+    res.redirect(`http://localhost:5173/auth-callback?token=${token}&userId=${user._id}&name=${encodeURIComponent(user.name)}&email=${encodeURIComponent(user.email)}&role=${user.role}`);
+  } catch (error) {
+    console.error('Google callback error:', error);
+    res.redirect('http://localhost:5173/login?error=authentication_failed');
   }
 };

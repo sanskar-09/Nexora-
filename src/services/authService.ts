@@ -26,7 +26,7 @@ const authService = {
   // Register a new user
   register: async (userData: RegisterData): Promise<User> => {
     try {
-      const response = await api.post<User>('/auth/register', userData);
+      const response = await api.post('/auth/register', userData) as User;
       
       if (response.token) {
         localStorage.setItem('token', response.token);
@@ -43,7 +43,7 @@ const authService = {
   // Login user
   login: async (credentials: LoginCredentials): Promise<User> => {
     try {
-      const response = await api.post<User>('/auth/login', credentials);
+      const response = await api.post('/auth/login', credentials) as User;
       
       if (response.token) {
         localStorage.setItem('token', response.token);
@@ -82,7 +82,7 @@ const authService = {
   // Get current user profile from API
   getUserProfile: async (): Promise<User> => {
     try {
-      return await api.get<User>('/auth/me');
+      return await api.get('/auth/me') as User;
     } catch (error) {
       console.error('Failed to get user profile:', error);
       throw error;
@@ -104,7 +104,7 @@ const authService = {
   // Forgot password
   forgotPassword: async (email: string): Promise<{ message: string }> => {
     try {
-      return await api.post<{ message: string }>('/auth/forgot-password', { email });
+      return await api.post('/auth/forgot-password', { email }) as { message: string };
     } catch (error) {
       console.error('Failed to process forgot password:', error);
       throw error;
@@ -114,7 +114,7 @@ const authService = {
   // Reset password
   resetPassword: async (resetToken: string, password: string): Promise<{ message: string }> => {
     try {
-      return await api.post<{ message: string }>(`/auth/reset-password/${resetToken}`, { password });
+      return await api.post(`/auth/reset-password/${resetToken}`, { password }) as { message: string };
     } catch (error) {
       console.error('Failed to reset password:', error);
       throw error;
