@@ -5,3 +5,4 @@ export { default as healthDataService } from './healthDataService';
 export { default as symptomService } from './symptomService';
 export { default as telemedicineService } from './telemedicineService';
 export { default as educationService } from './educationService';
+export { default as bluetoothService } from './bluetoothService';
