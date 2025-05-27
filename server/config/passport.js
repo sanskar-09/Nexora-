@@ -1,8 +1,8 @@
 import passport from 'passport';
-import { Strategy as GoogleStrategy } from 'passport-google-oauth20';
+import { Strategy as LocalStrategy } from 'passport-local';
 import User from '../models/User.js';
 
-// Configure Passport with Google OAuth strategy
+// Configure Passport with Local strategy
 const configurePassport = () => {
   // Serialize user for session
   passport.serializeUser((user, done) => {
@@ -19,39 +19,42 @@ const configurePassport = () => {
     }
   });
 
-  // Configure Google OAuth strategy
+  // Configure Local strategy
   passport.use(
-    new GoogleStrategy(
+    new LocalStrategy(
       {
-        clientID: process.env.GOOGLE_CLIENT_ID,
-        clientSecret: process.env.GOOGLE_CLIENT_SECRET,
-        callbackURL: process.env.GOOGLE_CALLBACK_URL,
-        scope: ['profile', 'email']
+        usernameField: 'email',
+        passwordField: 'password'
       },
-      async (accessToken, refreshToken, profile, done) => {
+      async (email, password, done) => {
         try {
-          // Check if user already exists
-          let user = await User.findOne({ email: profile.emails[0].value });
-
-          if (user) {
-            // User exists, update login info if needed
-            return done(null, user);
+          // For demo purposes, allow demo account
+          if (email === 'demo@example.com' && password === 'password') {
+            const demoUser = {
+              _id: 'demo_user',
+              name: 'Demo User',
+              email: 'demo@example.com',
+              role: 'patient'
+            };
+            return done(null, demoUser);
           }
 
-          // Create new user from Google profile
-          user = await User.create({
-            name: profile.displayName,
-            email: profile.emails[0].value,
-            // Generate a secure random password (user won't need this for Google login)
-            password: Math.random().toString(36).slice(-8) + Math.random().toString(36).slice(-8),
-            role: 'patient', // Default role
-            profilePicture: profile.photos[0]?.value,
-            googleId: profile.id
-          });
+          // Find user by email
+          const user = await User.findOne({ email });
+          
+          if (!user) {
+            return done(null, false, { message: 'Invalid email or password' });
+          }
+
+          // Check password
+          const isMatch = await user.comparePassword(password);
+          if (!isMatch) {
+            return done(null, false, { message: 'Invalid email or password' });
+          }
 
           return done(null, user);
         } catch (error) {
-          return done(error, null);
+          return done(error);
         }
       }
     )
