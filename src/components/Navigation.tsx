@@ -81,6 +81,11 @@ const Navigation = ({ onAuthChange, onLogin, isAuthenticated = false, activeTab,
     setIsLoggingIn(true);
     
     try {
+      if (!email || !password) {
+        setLoginError('Please enter both email and password');
+        return;
+      }
+
       if (onLogin) {
         const success = await onLogin(email, password);
         if (success) {
@@ -95,8 +100,8 @@ const Navigation = ({ onAuthChange, onLogin, isAuthenticated = false, activeTab,
         onAuthChange(true);
         setShowLoginForm(false);
       }
-    } catch (error) {
-      setLoginError('Login failed. Please try again.');
+    } catch (error: any) {
+      setLoginError(error.message || 'Login failed. Please try again.');
       console.error('Login error:', error);
     } finally {
       setIsLoggingIn(false);
@@ -105,19 +110,26 @@ const Navigation = ({ onAuthChange, onLogin, isAuthenticated = false, activeTab,
   
   // For demo purposes - quick login with demo account
   const handleQuickLogin = async () => {
-    if (onLogin) {
-      setIsLoggingIn(true);
-      try {
-        await onLogin('demo@example.com', 'password');
+    setIsLoggingIn(true);
+    setLoginError('');
+    
+    try {
+      if (onLogin) {
+        const success = await onLogin('demo@example.com', 'password');
+        if (success) {
+          setShowLoginForm(false);
+        } else {
+          setLoginError('Demo login failed. Please try again.');
+        }
+      } else {
+        onAuthChange(true);
         setShowLoginForm(false);
-      } catch (error) {
-        console.error('Quick login failed:', error);
-      } finally {
-        setIsLoggingIn(false);
       }
-    } else {
-      onAuthChange(true);
-      setShowLoginForm(false);
+    } catch (error: any) {
+      setLoginError(error.message || 'Demo login failed. Please try again.');
+      console.error('Quick login failed:', error);
+    } finally {
+      setIsLoggingIn(false);
     }
   };
   return (
@@ -184,7 +196,11 @@ const Navigation = ({ onAuthChange, onLogin, isAuthenticated = false, activeTab,
                   <div className="relative">
                     <form onSubmit={handleLoginSubmit} className="absolute right-0 top-10 bg-white p-4 rounded-md shadow-lg border border-gray-200 w-80 z-50">
                       <h3 className="text-lg font-medium mb-4">Sign In</h3>
-                      {loginError && <p className="text-red-500 text-sm mb-2">{loginError}</p>}
+                      {loginError && (
+                        <div className="mb-4 p-2 bg-red-50 border border-red-200 rounded text-red-600 text-sm">
+                          {loginError}
+                        </div>
+                      )}
                       <div className="space-y-3">
                         <div>
                           <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
@@ -193,8 +209,9 @@ const Navigation = ({ onAuthChange, onLogin, isAuthenticated = false, activeTab,
                             id="email" 
                             value={email} 
                             onChange={(e) => setEmail(e.target.value)} 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md" 
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                             required 
+                            disabled={isLoggingIn}
                           />
                         </div>
                         <div>
@@ -204,13 +221,29 @@ const Navigation = ({ onAuthChange, onLogin, isAuthenticated = false, activeTab,
                             id="password" 
                             value={password} 
                             onChange={(e) => setPassword(e.target.value)} 
-                            className="w-full px-3 py-2 border border-gray-300 rounded-md" 
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent" 
                             required 
+                            disabled={isLoggingIn}
                           />
                         </div>
                         <div className="flex justify-between items-center pt-2">
-                          <Button type="button" variant="ghost" size="sm" onClick={() => setShowLoginForm(false)}>Cancel</Button>
-                          <Button type="submit" disabled={isLoggingIn}>
+                          <Button 
+                            type="button" 
+                            variant="ghost" 
+                            size="sm" 
+                            onClick={() => {
+                              setShowLoginForm(false);
+                              setLoginError('');
+                            }}
+                            disabled={isLoggingIn}
+                          >
+                            Cancel
+                          </Button>
+                          <Button 
+                            type="submit" 
+                            disabled={isLoggingIn}
+                            className="bg-blue-600 hover:bg-blue-700 text-white"
+                          >
                             {isLoggingIn ? 'Signing in...' : 'Sign In'}
                           </Button>
                         </div>

@@ -4,11 +4,11 @@ import crypto from 'crypto';
 import mockDb from '../config/mockDb.js';
 
 // Flag to determine if we're using mock database
-const useMockDb = process.env.USE_MOCK_DB === 'true' || false;
+const useMockDb = import.meta.env.VITE_USE_MOCK_DB === 'true' || false;
 
 // Generate JWT token
 const generateToken = (id) => {
-  return jwt.sign({ id }, process.env.JWT_SECRET || 'your_jwt_secret', {
+  return jwt.sign({ id }, import.meta.env.VITE_JWT_SECRET || 'your_jwt_secret', {
     expiresIn: '30d',
   });
 };

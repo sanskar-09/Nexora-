@@ -1,11 +1,18 @@
 // Simple fetch-based API client
-const API_URL = 'http://localhost:5000/api';
+const API_URL = import.meta.env.VITE_API_URL || 'http://localhost:5000/api';
 
 type RequestOptions = {
   method: 'GET' | 'POST' | 'PUT' | 'DELETE';
   headers?: Record<string, string>;
   body?: any;
 };
+
+class ApiError extends Error {
+  constructor(public status: number, message: string) {
+    super(message);
+    this.name = 'ApiError';
+  }
+}
 
 const api = {
   async request<T>(endpoint: string, options: RequestOptions): Promise<T> {
@@ -24,6 +31,7 @@ const api = {
       method: options.method,
       headers,
       body: options.body ? JSON.stringify(options.body) : undefined,
+      credentials: 'include', // Include cookies in the request
     };
     
     try {
@@ -33,37 +41,40 @@ const api = {
       if (response.status === 401) {
         localStorage.removeItem('token');
         localStorage.removeItem('user');
-        window.location.href = '/';
-        throw new Error('Unauthorized');
-      }
-      
-      if (!response.ok) {
-        throw new Error(`API Error: ${response.statusText}`);
+        throw new ApiError(401, 'Session expired. Please login again.');
       }
       
       const data = await response.json();
+      
+      if (!response.ok) {
+        throw new ApiError(response.status, data.message || 'Something went wrong');
+      }
+      
       return data as T;
     } catch (error) {
+      if (error instanceof ApiError) {
+        throw error;
+      }
       console.error('API request failed:', error);
-      throw error;
+      throw new ApiError(500, 'Network error. Please check your connection.');
     }
   },
   
   // Helper methods for common HTTP methods
-  get(endpoint: string): Promise<any> {
-    return this.request(endpoint, { method: 'GET' });
+  get<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'GET' });
   },
   
-  post(endpoint: string, data: any): Promise<any> {
-    return this.request(endpoint, { method: 'POST', body: data });
+  post<T>(endpoint: string, data: any): Promise<T> {
+    return this.request<T>(endpoint, { method: 'POST', body: data });
   },
   
-  put(endpoint: string, data: any): Promise<any> {
-    return this.request(endpoint, { method: 'PUT', body: data });
+  put<T>(endpoint: string, data: any): Promise<T> {
+    return this.request<T>(endpoint, { method: 'PUT', body: data });
   },
   
-  delete(endpoint: string): Promise<any> {
-    return this.request(endpoint, { method: 'DELETE' });
+  delete<T>(endpoint: string): Promise<T> {
+    return this.request<T>(endpoint, { method: 'DELETE' });
   },
 };
 

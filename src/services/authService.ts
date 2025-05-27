@@ -25,62 +25,100 @@ export interface User {
 const authService = {
   // Register a new user
   register: async (userData: RegisterData): Promise<User> => {
-    const response = await api.post('/auth/register', userData);
-    
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data));
+    try {
+      const response = await api.post<User>('/auth/register', userData);
+      
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response));
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Registration failed:', error);
+      throw error;
     }
-    
-    return response.data;
   },
   
   // Login user
   login: async (credentials: LoginCredentials): Promise<User> => {
-    const response = await api.post('/auth/login', credentials);
-    
-    if (response.data.token) {
-      localStorage.setItem('token', response.data.token);
-      localStorage.setItem('user', JSON.stringify(response.data));
+    try {
+      const response = await api.post<User>('/auth/login', credentials);
+      
+      if (response.token) {
+        localStorage.setItem('token', response.token);
+        localStorage.setItem('user', JSON.stringify(response));
+      }
+      
+      return response;
+    } catch (error) {
+      console.error('Login failed:', error);
+      throw error;
     }
-    
-    return response.data;
   },
   
   // Logout user
   logout: (): void => {
-    localStorage.removeItem('token');
-    localStorage.removeItem('user');
+    try {
+      localStorage.removeItem('token');
+      localStorage.removeItem('user');
+    } catch (error) {
+      console.error('Logout failed:', error);
+    }
   },
   
   // Get current user from localStorage
   getCurrentUser: (): User | null => {
-    const userStr = localStorage.getItem('user');
-    if (!userStr) return null;
-    return JSON.parse(userStr);
+    try {
+      const userStr = localStorage.getItem('user');
+      if (!userStr) return null;
+      return JSON.parse(userStr);
+    } catch (error) {
+      console.error('Failed to get current user:', error);
+      return null;
+    }
   },
   
   // Get current user profile from API
   getUserProfile: async (): Promise<User> => {
-    const response = await api.get('/auth/me');
-    return response.data;
+    try {
+      return await api.get<User>('/auth/me');
+    } catch (error) {
+      console.error('Failed to get user profile:', error);
+      throw error;
+    }
   },
   
   // Check if user is authenticated
   isAuthenticated: (): boolean => {
-    return localStorage.getItem('token') !== null;
+    try {
+      const token = localStorage.getItem('token');
+      const user = localStorage.getItem('user');
+      return !!(token && user);
+    } catch (error) {
+      console.error('Failed to check authentication:', error);
+      return false;
+    }
   },
   
   // Forgot password
   forgotPassword: async (email: string): Promise<{ message: string }> => {
-    const response = await api.post('/auth/forgot-password', { email });
-    return response.data;
+    try {
+      return await api.post<{ message: string }>('/auth/forgot-password', { email });
+    } catch (error) {
+      console.error('Failed to process forgot password:', error);
+      throw error;
+    }
   },
   
   // Reset password
   resetPassword: async (resetToken: string, password: string): Promise<{ message: string }> => {
-    const response = await api.post(`/auth/reset-password/${resetToken}`, { password });
-    return response.data;
+    try {
+      return await api.post<{ message: string }>(`/auth/reset-password/${resetToken}`, { password });
+    } catch (error) {
+      console.error('Failed to reset password:', error);
+      throw error;
+    }
   }
 };
 
