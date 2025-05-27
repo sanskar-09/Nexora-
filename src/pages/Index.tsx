@@ -7,11 +7,19 @@ import HealthMonitoring from '@/components/HealthMonitoring';
 import UserProfile from '@/components/UserProfile';
 import Telemedicine from '@/components/Telemedicine';
 import HealthEducation from '@/components/HealthEducation';
+import { authService } from '@/services';
 
-const Index = () => {
+interface IndexProps {
+  isAuthenticated?: boolean;
+  userRole?: 'patient' | 'doctor' | 'admin';
+  onAuthChange?: (authenticated: boolean, role?: 'patient' | 'doctor' | 'admin') => void;
+}
+
+const Index = ({ isAuthenticated: propIsAuthenticated, userRole: propUserRole, onAuthChange }: IndexProps) => {
   const [activeTab, setActiveTab] = useState('telemedicine');
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Set to true for testing
-  const [userRole, setUserRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
+  // Use props if provided, otherwise use local state
+  const [isAuthenticated, setIsAuthenticated] = useState(propIsAuthenticated !== undefined ? propIsAuthenticated : true);
+  const [userRole, setUserRole] = useState<'patient' | 'doctor' | 'admin'>(propUserRole || 'patient');
 
   const renderContent = () => {
     switch (activeTab) {
@@ -34,10 +42,42 @@ const Index = () => {
     }
   };
 
+  // Handle login
+  const handleLogin = async (email: string, password: string) => {
+    try {
+      const user = await authService.login({ email, password });
+      setIsAuthenticated(true);
+      setUserRole(user.role);
+      if (onAuthChange) {
+        onAuthChange(true, user.role);
+      }
+      return true;
+    } catch (error) {
+      console.error('Login failed:', error);
+      return false;
+    }
+  };
+
+  // Handle logout
+  const handleLogout = () => {
+    authService.logout();
+    setIsAuthenticated(false);
+    setUserRole('patient');
+    if (onAuthChange) {
+      onAuthChange(false);
+    }
+  };
+
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 to-green-50">
-        <Navigation onAuthChange={setIsAuthenticated} />
+        <Navigation 
+          onAuthChange={(auth) => {
+            setIsAuthenticated(auth);
+            if (onAuthChange) onAuthChange(auth);
+          }} 
+          onLogin={handleLogin}
+        />
         <div className="container mx-auto px-4 pt-24 pb-12">
           <div className="text-center max-w-4xl mx-auto">
             <h1 className="text-5xl font-bold text-gray-900 mb-6">
@@ -50,7 +90,10 @@ const Index = () => {
             <div className="flex flex-col sm:flex-row gap-4 justify-center mb-12">
               <button 
                 className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 rounded-lg font-medium transition-colors"
-                onClick={() => setIsAuthenticated(true)}
+                onClick={() => {
+                  // For demo purposes, use demo credentials
+                  handleLogin('demo@example.com', 'password');
+                }}
               >
                 Get Started Today
               </button>
@@ -111,7 +154,11 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation 
-        onAuthChange={setIsAuthenticated} 
+        onAuthChange={(auth) => {
+          setIsAuthenticated(auth);
+          if (onAuthChange) onAuthChange(auth);
+        }} 
+        onLogin={handleLogin}
         isAuthenticated={isAuthenticated}
         activeTab={activeTab}
         onTabChange={setActiveTab}

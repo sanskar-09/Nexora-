@@ -1,4 +1,4 @@
-
+import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -22,6 +22,7 @@ import {
 
 interface NavigationProps {
   onAuthChange: (isAuth: boolean) => void;
+  onLogin?: (email: string, password: string) => Promise<boolean>;
   isAuthenticated?: boolean;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
@@ -65,7 +66,60 @@ const menuItems = [
   },
 ];
 
-const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabChange }: NavigationProps) => {
+const Navigation = ({ onAuthChange, onLogin, isAuthenticated = false, activeTab, onTabChange }: NavigationProps) => {
+  // State for login form
+  const [showLoginForm, setShowLoginForm] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [loginError, setLoginError] = useState('');
+  const [isLoggingIn, setIsLoggingIn] = useState(false);
+  
+  // Handle login form submission
+  const handleLoginSubmit = async (e: React.FormEvent) => {
+    e.preventDefault();
+    setLoginError('');
+    setIsLoggingIn(true);
+    
+    try {
+      if (onLogin) {
+        const success = await onLogin(email, password);
+        if (success) {
+          setShowLoginForm(false);
+          setEmail('');
+          setPassword('');
+        } else {
+          setLoginError('Invalid email or password');
+        }
+      } else {
+        // Fallback if onLogin not provided
+        onAuthChange(true);
+        setShowLoginForm(false);
+      }
+    } catch (error) {
+      setLoginError('Login failed. Please try again.');
+      console.error('Login error:', error);
+    } finally {
+      setIsLoggingIn(false);
+    }
+  };
+  
+  // For demo purposes - quick login with demo account
+  const handleQuickLogin = async () => {
+    if (onLogin) {
+      setIsLoggingIn(true);
+      try {
+        await onLogin('demo@example.com', 'password');
+        setShowLoginForm(false);
+      } catch (error) {
+        console.error('Quick login failed:', error);
+      } finally {
+        setIsLoggingIn(false);
+      }
+    } else {
+      onAuthChange(true);
+      setShowLoginForm(false);
+    }
+  };
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4">
@@ -115,7 +169,10 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
                     <DropdownMenuItem>Settings</DropdownMenuItem>
                     <DropdownMenuItem>Support</DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={() => onAuthChange(false)}>
+                    <DropdownMenuItem onClick={() => {
+                      // Always log out
+                      onAuthChange(false);
+                    }}>
                       Sign out
                     </DropdownMenuItem>
                   </DropdownMenuContent>
@@ -123,11 +180,61 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
               </>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button variant="ghost" onClick={() => onAuthChange(true)}>
+                {showLoginForm ? (
+                  <div className="relative">
+                    <form onSubmit={handleLoginSubmit} className="absolute right-0 top-10 bg-white p-4 rounded-md shadow-lg border border-gray-200 w-80 z-50">
+                      <h3 className="text-lg font-medium mb-4">Sign In</h3>
+                      {loginError && <p className="text-red-500 text-sm mb-2">{loginError}</p>}
+                      <div className="space-y-3">
+                        <div>
+                          <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
+                          <input 
+                            type="email" 
+                            id="email" 
+                            value={email} 
+                            onChange={(e) => setEmail(e.target.value)} 
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md" 
+                            required 
+                          />
+                        </div>
+                        <div>
+                          <label htmlFor="password" className="block text-sm font-medium text-gray-700 mb-1">Password</label>
+                          <input 
+                            type="password" 
+                            id="password" 
+                            value={password} 
+                            onChange={(e) => setPassword(e.target.value)} 
+                            className="w-full px-3 py-2 border border-gray-300 rounded-md" 
+                            required 
+                          />
+                        </div>
+                        <div className="flex justify-between items-center pt-2">
+                          <Button type="button" variant="ghost" size="sm" onClick={() => setShowLoginForm(false)}>Cancel</Button>
+                          <Button type="submit" disabled={isLoggingIn}>
+                            {isLoggingIn ? 'Signing in...' : 'Sign In'}
+                          </Button>
+                        </div>
+                        <div className="pt-2 border-t border-gray-200 mt-2">
+                          <Button 
+                            type="button" 
+                            variant="outline" 
+                            size="sm" 
+                            className="w-full" 
+                            onClick={handleQuickLogin}
+                            disabled={isLoggingIn}
+                          >
+                            Demo Login
+                          </Button>
+                        </div>
+                      </div>
+                    </form>
+                  </div>
+                ) : null}
+                <Button variant="ghost" onClick={() => setShowLoginForm(true)}>
                   Sign In
                 </Button>
-                <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => onAuthChange(true)}>
-                  Sign Up
+                <Button className="bg-blue-600 hover:bg-blue-700" onClick={handleQuickLogin}>
+                  Demo Login
                 </Button>
               </div>
             )}
