@@ -27,7 +27,7 @@ const Index = ({ activeTab: propActiveTab, onTabChange }: IndexProps) => {
   const renderContent = () => {
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard userRole="patient" />;
+        return <Dashboard userRole="patient" onTabChange={handleTabChange} />;
       case 'symptoms':
         return <SymptomChecker />;
       case 'medications':
@@ -41,7 +41,7 @@ const Index = ({ activeTab: propActiveTab, onTabChange }: IndexProps) => {
       case 'profile':
         return <UserProfile userRole="patient" />;
       default:
-        return <Dashboard userRole="patient" />;
+        return <Dashboard userRole="patient" onTabChange={handleTabChange} />;
     }
   };
 

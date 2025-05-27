@@ -3,12 +3,25 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
+import { useNavigate } from "react-router-dom";
+import { useToast } from "@/components/ui/use-toast";
+import { useState } from "react";
+import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
+import { format } from 'date-fns';
+import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from "@/components/ui/table";
 
 interface DashboardProps {
   userRole: 'patient' | 'doctor' | 'admin';
+  onTabChange?: (tab: string, data?: any) => void;
 }
 
-const Dashboard = ({ userRole }: DashboardProps) => {
+const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
+  const { toast } = useToast();
+  const [selectedAppointment, setSelectedAppointment] = useState<number | null>(null);
+  const [selectedMedication, setSelectedMedication] = useState<number | null>(null);
+  const [isAppointmentsDialogOpen, setIsAppointmentsDialogOpen] = useState(false);
+  const [isAppointmentDetailsDialogOpen, setIsAppointmentDetailsDialogOpen] = useState(false);
+  const [isMedicationDetailsDialogOpen, setIsMedicationDetailsDialogOpen] = useState(false);
   const healthScore = 85;
   const upcomingAppointments = [
     { id: 1, doctor: "Dr. Sarah Johnson", specialty: "Cardiology", date: "2024-01-15", time: "10:00 AM" },
@@ -135,10 +148,27 @@ const Dashboard = ({ userRole }: DashboardProps) => {
                   <p className="text-sm text-gray-600">{appointment.specialty}</p>
                   <p className="text-sm text-blue-600">{appointment.date} at {appointment.time}</p>
                 </div>
-                <Button variant="outline" size="sm">View Details</Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => {
+                    setSelectedAppointment(appointment.id);
+                    setIsAppointmentDetailsDialogOpen(true);
+                  }}
+                >
+                  View Details
+                </Button>
               </div>
             ))}
-            <Button className="w-full mt-4" variant="outline">View All Appointments</Button>
+            <Button 
+              className="w-full mt-4" 
+              variant="outline"
+              onClick={() => {
+                setIsAppointmentsDialogOpen(true);
+              }}
+            >
+              View All Appointments
+            </Button>
           </CardContent>
         </Card>
 
@@ -156,20 +186,47 @@ const Dashboard = ({ userRole }: DashboardProps) => {
                   <p className="text-sm text-gray-600">{med.dosage}</p>
                   <p className="text-sm text-blue-600">{med.nextDose}</p>
                 </div>
-                <Badge 
-                  variant={med.status === 'on-time' ? 'default' : 'secondary'}
-                  className={
-                    med.status === 'on-time' ? 'bg-green-100 text-green-800' :
-                    med.status === 'missed' ? 'bg-red-100 text-red-800' :
-                    'bg-blue-100 text-blue-800'
-                  }
-                >
-                  {med.status === 'on-time' ? 'On Time' : 
-                   med.status === 'missed' ? 'Missed' : 'Upcoming'}
-                </Badge>
+                <div className="flex items-center space-x-2">
+                  <Badge 
+                    variant={med.status === 'on-time' ? 'default' : 'secondary'}
+                    className={
+                      med.status === 'on-time' ? 'bg-green-100 text-green-800' :
+                      med.status === 'missed' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }
+                  >
+                    {med.status === 'on-time' ? 'On Time' : 
+                     med.status === 'missed' ? 'Missed' : 'Upcoming'}
+                  </Badge>
+                  <Button 
+                    variant="ghost" 
+                    size="sm"
+                    className="px-2"
+                    onClick={() => {
+                      setSelectedMedication(med.id);
+                      setIsMedicationDetailsDialogOpen(true);
+                    }}
+                  >
+                    View
+                  </Button>
+                </div>
               </div>
             ))}
-            <Button className="w-full mt-4" variant="outline">Manage Medications</Button>
+            <Button 
+              className="w-full mt-4" 
+              variant="outline"
+              onClick={() => {
+                if (onTabChange) {
+                  onTabChange('medications');
+                  toast({
+                    title: "Medications",
+                    description: "Navigating to medication management",
+                  });
+                }
+              }}
+            >
+              Manage Medications
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -249,6 +306,188 @@ const Dashboard = ({ userRole }: DashboardProps) => {
           </div>
         </CardContent>
       </Card>
+      {/* Appointments Dialog */}
+      <Dialog open={isAppointmentsDialogOpen} onOpenChange={setIsAppointmentsDialogOpen}>
+        <DialogContent className="max-w-4xl">
+          <DialogHeader>
+            <DialogTitle>All Appointments</DialogTitle>
+            <DialogDescription>
+              Your scheduled medical appointments
+            </DialogDescription>
+          </DialogHeader>
+          <div className="max-h-[60vh] overflow-auto">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Doctor</TableHead>
+                  <TableHead>Specialty</TableHead>
+                  <TableHead>Date</TableHead>
+                  <TableHead>Time</TableHead>
+                  <TableHead>Actions</TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {upcomingAppointments.map((appointment) => (
+                  <TableRow key={appointment.id}>
+                    <TableCell className="font-medium">{appointment.doctor}</TableCell>
+                    <TableCell>{appointment.specialty}</TableCell>
+                    <TableCell>{appointment.date}</TableCell>
+                    <TableCell>{appointment.time}</TableCell>
+                    <TableCell>
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        onClick={() => {
+                          setSelectedAppointment(appointment.id);
+                          setIsAppointmentDetailsDialogOpen(true);
+                          setIsAppointmentsDialogOpen(false);
+                        }}
+                      >
+                        View Details
+                      </Button>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
+          </div>
+          <DialogFooter>
+            <Button 
+              onClick={() => {
+                if (onTabChange) {
+                  onTabChange('telemedicine');
+                  setIsAppointmentsDialogOpen(false);
+                }
+              }}
+            >
+              Go to Telemedicine
+            </Button>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Appointment Details Dialog */}
+      <Dialog open={isAppointmentDetailsDialogOpen} onOpenChange={setIsAppointmentDetailsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Appointment Details</DialogTitle>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="space-y-4">
+              {(() => {
+                const appointment = upcomingAppointments.find(a => a.id === selectedAppointment);
+                if (!appointment) return null;
+                
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Doctor</p>
+                        <p className="text-lg font-medium">{appointment.doctor}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Specialty</p>
+                        <p className="text-lg">{appointment.specialty}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Date</p>
+                        <p className="text-lg">{appointment.date}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Time</p>
+                        <p className="text-lg">{appointment.time}</p>
+                      </div>
+                    </div>
+                    <div className="pt-4">
+                      <p className="text-sm font-medium text-gray-500">Location</p>
+                      <p className="text-lg">Main Hospital, Room 305</p>
+                    </div>
+                    <div className="pt-4">
+                      <p className="text-sm font-medium text-gray-500">Notes</p>
+                      <p className="text-lg">Regular checkup for health monitoring</p>
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button variant="outline">Reschedule</Button>
+                      <Button variant="destructive">Cancel Appointment</Button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Medication Details Dialog */}
+      <Dialog open={isMedicationDetailsDialogOpen} onOpenChange={setIsMedicationDetailsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Medication Details</DialogTitle>
+          </DialogHeader>
+          {selectedMedication && (
+            <div className="space-y-4">
+              {(() => {
+                const medication = recentMedications.find(m => m.id === selectedMedication);
+                if (!medication) return null;
+                
+                return (
+                  <>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Medication</p>
+                        <p className="text-lg font-medium">{medication.name}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Dosage</p>
+                        <p className="text-lg">{medication.dosage}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Next Dose</p>
+                        <p className="text-lg">{medication.nextDose}</p>
+                      </div>
+                      <div>
+                        <p className="text-sm font-medium text-gray-500">Status</p>
+                        <Badge 
+                          variant={medication.status === 'on-time' ? 'default' : 'secondary'}
+                          className={
+                            medication.status === 'on-time' ? 'bg-green-100 text-green-800' :
+                            medication.status === 'missed' ? 'bg-red-100 text-red-800' :
+                            'bg-blue-100 text-blue-800'
+                          }
+                        >
+                          {medication.status === 'on-time' ? 'On Time' : 
+                           medication.status === 'missed' ? 'Missed' : 'Upcoming'}
+                        </Badge>
+                      </div>
+                    </div>
+                    <div className="pt-4">
+                      <p className="text-sm font-medium text-gray-500">Instructions</p>
+                      <p className="text-lg">Take with food and water. Avoid alcohol.</p>
+                    </div>
+                    <div className="pt-4">
+                      <p className="text-sm font-medium text-gray-500">Side Effects</p>
+                      <p className="text-lg">May cause drowsiness. Do not drive or operate heavy machinery.</p>
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-4">
+                      <Button variant="outline">Set Reminder</Button>
+                      <Button 
+                        onClick={() => {
+                          if (onTabChange) {
+                            onTabChange('medications');
+                            setIsMedicationDetailsDialogOpen(false);
+                          }
+                        }}
+                      >
+                        View All Medications
+                      </Button>
+                    </div>
+                  </>
+                );
+              })()}
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
     </div>
   );
 };
