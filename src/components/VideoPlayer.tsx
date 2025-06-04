@@ -182,7 +182,7 @@ const VideoPlayer = ({ src, title, poster, onComplete }: VideoPlayerProps) => {
             className="cursor-pointer"
           />
           
-          <div className="flex items-center justify-between">
+          <div className="flex items-center justify-between w-full">
             <div className="flex items-center gap-2">
               {/* Play/Pause Button */}
               <Button 
@@ -199,28 +199,27 @@ const VideoPlayer = ({ src, title, poster, onComplete }: VideoPlayerProps) => {
                 {formatTime(currentTime)} / {formatTime(duration)}
               </span>
             </div>
-            
+
             <div className="flex items-center gap-2">
               {/* Volume Control */}
-              <div className="flex items-center gap-2">
-                <Button 
-                  variant="ghost" 
-                  size="icon" 
-                  className="h-8 w-8 text-white hover:bg-white/20 hover:text-white"
-                  onClick={toggleMute}
-                >
-                  {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
-                </Button>
-                <Slider
-                  value={[isMuted ? 0 : volume]}
-                  min={0}
-                  max={1}
-                  step={0.1}
-                  onValueChange={handleVolumeChange}
-                  className="w-20 cursor-pointer"
-                />
-              </div>
-              
+              <Slider
+                value={[volume]}
+                min={0}
+                max={1}
+                step={0.01}
+                onValueChange={handleVolumeChange}
+                className="w-24"
+              />
+              {/* Mute Button */}
+              <Button 
+                variant="ghost" 
+                size="icon" 
+                className="h-8 w-8 text-white hover:bg-white/20 hover:text-white"
+                onClick={toggleMute}
+              >
+                {isMuted ? <VolumeX className="h-4 w-4" /> : <Volume2 className="h-4 w-4" />}
+              </Button>
+
               {/* Fullscreen Button */}
               <Button 
                 variant="ghost" 

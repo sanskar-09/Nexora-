@@ -9,6 +9,8 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { format, addDays, isSameDay, parseISO } from 'date-fns';
+import telemedicineService from "@/services/telemedicineService";
+import { useToast } from "@/hooks/use-toast";
 
 interface Appointment {
   id: number;
@@ -23,12 +25,52 @@ interface Appointment {
 }
 
 const AppointmentScheduler = () => {
+  // Custom colors for different appointment types
+  const appointmentColors = {
+    'in-person': {
+      bg: 'bg-green-100',
+      text: 'text-green-800',
+      label: 'In-Person Visit'
+    },
+    'video': {
+      bg: 'bg-blue-100',
+      text: 'text-blue-800',
+      label: 'Video Consultation'
+    },
+    'phone': {
+      bg: 'bg-purple-100',
+      text: 'text-purple-800',
+      label: 'Phone Consultation'
+    }
+  };
+
+  // Custom status colors
+  const statusColors = {
+    'scheduled': {
+      bg: 'bg-green-100',
+      text: 'text-green-800'
+    },
+    'cancelled': {
+      bg: 'bg-red-100',
+      text: 'text-red-800'
+    },
+    'completed': {
+      bg: 'bg-blue-100',
+      text: 'text-blue-800'
+    }
+  };
+
+  const { toast, dismiss } = useToast();
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedDoctor, setSelectedDoctor] = useState<string>('');
+  const [selectedAppointmentToReschedule, setSelectedAppointmentToReschedule] = useState<Appointment | null>(null);
+  const [rescheduleDialogOpen, setRescheduleDialogOpen] = useState(false);
   const [selectedType, setSelectedType] = useState<'in-person' | 'video' | 'phone'>('in-person');
   const [appointmentNotes, setAppointmentNotes] = useState<string>('');
-  const [appointments, setAppointments] = useState<Appointment[]>([
+
+  // Initial appointments data
+  const initialAppointments: Appointment[] = [
     {
       id: 1,
       doctorName: "Dr. Sarah Johnson",
@@ -59,7 +101,14 @@ const AppointmentScheduler = () => {
       location: "Virtual Appointment",
       type: 'video'
     }
-  ]);
+  ];
+
+  const [appointments, setAppointments] = useState<Appointment[]>(initialAppointments);
+
+  // Helper functions
+  const getAppointmentsForDate = (date: Date) => {
+    return appointments.filter(app => isSameDay(app.date, date));
+  };
 
   const availableDoctors = [
     { id: 1, name: "Dr. Sarah Johnson", specialty: "Cardiology", availableDays: [1, 3, 5] },
@@ -101,19 +150,123 @@ const AppointmentScheduler = () => {
     setAppointmentNotes('');
   };
 
-  const cancelAppointment = (id: number) => {
-    setAppointments(appointments.map(app => 
-      app.id === id ? { ...app, status: 'cancelled' } : app
-    ));
+  const cancelAppointment = async (id: number) => {
+    try {
+      // First update local state
+      setAppointments(prevAppointments => prevAppointments.map(app => 
+        app.id === id ? { ...app, status: 'cancelled' } : app
+      ));
+
+      // Then make API call to server
+      await telemedicineService.deleteAppointment(id.toString());
+      
+      // Show success message
+      const successToast = toast({
+        title: 'Success',
+        description: 'Appointment cancelled successfully',
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) {
+            dismiss(successToast.id);
+          }
+        },
+        duration: 3000
+      });
+      
+      // Automatically dismiss after 3 seconds
+      setTimeout(() => {
+        dismiss(successToast.id);
+      }, 3000);
+    } catch (error) {
+      console.error('Error cancelling appointment:', error);
+      // Show error message
+      const errorToast = toast({
+        title: 'Error',
+        description: 'Failed to cancel appointment. Please try again.',
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) {
+            dismiss(errorToast.id);
+          }
+        },
+        duration: 3000
+      });
+      
+      // Automatically dismiss after 3 seconds
+      setTimeout(() => {
+        dismiss(errorToast.id);
+      }, 3000);
+      
+      // Revert local state if API call fails
+      setAppointments(prevAppointments => prevAppointments.map(app => 
+        app.id === id ? { ...app, status: 'scheduled' } : app
+      ));
+    }
   };
 
-  const rescheduleAppointment = (id: number) => {
-    // Implementation for rescheduling would go here
-    console.log("Reschedule appointment", id);
+  const handleRescheduleClick = (appointment: Appointment) => {
+    setSelectedAppointmentToReschedule(appointment);
+    setRescheduleDialogOpen(true);
   };
 
-  const getAppointmentsForDate = (date: Date) => {
-    return appointments.filter(app => isSameDay(app.date, date));
+  const rescheduleAppointment = async (id: number, newDate: Date, newTime: string) => {
+    try {
+      // First update local state
+      setAppointments(prevAppointments => prevAppointments.map(app => 
+        app.id === id ? { ...app, date: newDate, time: newTime } : app
+      ));
+
+      // Then make API call to server
+      await telemedicineService.updateAppointment(
+        id.toString(),
+        { dateTime: new Date(newDate.toISOString().split('T')[0] + 'T' + newTime),
+          status: 'scheduled' }
+      );
+
+      // Close dialog and show success message
+      setRescheduleDialogOpen(false);
+      // Show success message
+      const successToast = toast({
+        title: 'Success',
+        description: 'Appointment rescheduled successfully',
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) {
+            dismiss(successToast.id);
+          }
+        },
+        duration: 3000
+      });
+      
+      // Automatically dismiss after 3 seconds
+      setTimeout(() => {
+        dismiss(successToast.id);
+      }, 3000);
+    } catch (error) {
+      console.error('Error rescheduling appointment:', error);
+      // Show error message
+      const errorToast = toast({
+        title: 'Error',
+        description: 'Failed to reschedule appointment. Please try again.',
+        open: true,
+        onOpenChange: (open) => {
+          if (!open) {
+            dismiss(errorToast.id);
+          }
+        },
+        duration: 3000
+      });
+      
+      // Automatically dismiss after 3 seconds
+      setTimeout(() => {
+        dismiss(errorToast.id);
+      }, 3000);
+      // Revert local state if API call fails
+      setAppointments(prevAppointments => prevAppointments.map(app => 
+        app.id === id ? { ...app, date: selectedAppointmentToReschedule?.date || new Date(), 
+                         time: selectedAppointmentToReschedule?.time || '' } : app
+      ));
+    }
   };
 
   return (
@@ -142,117 +295,88 @@ const AppointmentScheduler = () => {
                   <CardHeader className="pb-2">
                     <div className="flex justify-between items-start">
                       <div>
-                        <CardTitle>{appointment.doctorName}</CardTitle>
-                        <CardDescription>{appointment.specialty}</CardDescription>
+                        <CardTitle className="text-4xl font-bold text-blue-600">{appointment.doctorName}</CardTitle>
+                        <CardDescription className="text-blue-400">Book and manage your medical appointments</CardDescription>
                       </div>
-                      <Badge className={appointment.type === 'video' ? 'bg-blue-100 text-blue-800' : 
-                                        appointment.type === 'phone' ? 'bg-purple-100 text-purple-800' : 
-                                        'bg-green-100 text-green-800'}>
-                        {appointment.type === 'video' ? 'Video Call' : 
-                         appointment.type === 'phone' ? 'Phone Call' : 'In-Person'}
+                      <Badge className={`${appointmentColors[appointment.type].bg} ${appointmentColors[appointment.type].text} font-semibold`}>
+                        {appointmentColors[appointment.type].label}
                       </Badge>
                     </div>
                   </CardHeader>
                   <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Date & Time:</span>
-                        <span className="text-sm">
-                          {format(appointment.date, 'MMMM d, yyyy')} at {appointment.time}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Location:</span>
-                        <span className="text-sm">{appointment.location}</span>
-                      </div>
-                      {appointment.notes && (
-                        <div className="pt-2">
-                          <span className="text-sm font-medium">Notes:</span>
-                          <p className="text-sm text-gray-600 mt-1">{appointment.notes}</p>
+                    <div className="space-y-4">
+                      <div className="flex justify-between items-center">
+                        <div>
+                          <p className="font-medium">{appointment.doctorName} - {appointment.specialty}</p>
+                          <p className="text-sm text-gray-500">
+                            {format(appointment.date, 'MMMM d, yyyy')} at {appointment.time}
+                          </p>
                         </div>
-                      )}
-                      <div className="flex justify-end space-x-2 pt-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => rescheduleAppointment(appointment.id)}
-                        >
-                          Reschedule
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => cancelAppointment(appointment.id)}
-                        >
-                          Cancel
-                        </Button>
+                        <Badge className={`${statusColors[appointment.status].bg} ${statusColors[appointment.status].text} font-semibold`}>
+                          {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
+                        </Badge>
                       </div>
+                      <div className="space-y-2">
+                        <span className="text-sm font-medium">Location:</span>
+                        <p className="text-sm text-gray-600">{appointment.location}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-sm font-medium">Type:</span>
+                        <p className="text-sm text-gray-600">{appointment.type}</p>
+                      </div>
+                      <div className="space-y-2">
+                        <span className="text-sm font-medium">Notes:</span>
+                        <p className="text-sm text-gray-600 mt-1">{appointment.notes}</p>
+                      </div>
+                    </div>
+                    <div className="flex justify-end space-x-2 pt-2">
+                      <Button 
+                        variant="outline" 
+                        size="sm"
+                        className="bg-yellow-50 hover:bg-yellow-100 text-yellow-700 border-yellow-300"
+                        onClick={() => {
+                          setSelectedAppointmentToReschedule(appointment);
+                          setRescheduleDialogOpen(true);
+                        }}
+                      >
+                        Reschedule
+                      </Button>
+                      <Button 
+                        variant="destructive" 
+                        size="sm"
+                        className="bg-red-50 hover:bg-red-100 text-red-700 border-red-300"
+                        onClick={() => cancelAppointment(appointment.id)}
+                      >
+                        Cancel
+                      </Button>
                     </div>
                   </CardContent>
                 </Card>
               ))}
           </div>
-          {appointments.filter(app => app.status === 'scheduled').length === 0 && (
-            <Card>
-              <CardContent className="pt-6 text-center">
-                <p className="text-gray-500">You have no upcoming appointments.</p>
-                <Button className="mt-4" onClick={() => document.getElementById('book-tab')?.click()}>
-                  Book an Appointment
-                </Button>
-              </CardContent>
-            </Card>
-          )}
         </TabsContent>
 
         <TabsContent value="book" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-            <Card>
-              <CardHeader>
-                <CardTitle>Select Date & Doctor</CardTitle>
-                <CardDescription>Choose your preferred date and doctor</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="doctor">Doctor</Label>
-                  <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                    <SelectTrigger id="doctor">
-                      <SelectValue placeholder="Select a doctor" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      {availableDoctors.map(doctor => (
-                        <SelectItem key={doctor.id} value={doctor.name}>
-                          {doctor.name} - {doctor.specialty}
-                        </SelectItem>
-                      ))}
-                    </SelectContent>
-                  </Select>
-                </div>
-
-                <div className="space-y-1">
-                  <Label>Appointment Date</Label>
+          <Card>
+            <CardHeader>
+              <CardTitle className="text-4xl font-bold text-blue-600">Book Appointment</CardTitle>
+              <CardDescription className="text-blue-400">Book a new appointment</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="date">Date</Label>
                   <Calendar
                     mode="single"
                     selected={date}
                     onSelect={setDate}
                     className="rounded-md border"
-                    disabled={{
-                      before: new Date(),
-                    }}
                   />
                 </div>
-              </CardContent>
-            </Card>
-
-            <Card>
-              <CardHeader>
-                <CardTitle>Appointment Details</CardTitle>
-                <CardDescription>Complete your appointment information</CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="space-y-1">
-                  <Label htmlFor="time">Time Slot</Label>
+                <div className="space-y-2">
+                  <Label htmlFor="time">Time</Label>
                   <Select value={selectedTime} onValueChange={setSelectedTime}>
-                    <SelectTrigger id="time">
+                    <SelectTrigger className="w-full">
                       <SelectValue placeholder="Select a time" />
                     </SelectTrigger>
                     <SelectContent>
@@ -264,83 +388,64 @@ const AppointmentScheduler = () => {
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="type">Appointment Type</Label>
-                  <Select value={selectedType} onValueChange={(value: 'in-person' | 'video' | 'phone') => setSelectedType(value)}>
-                    <SelectTrigger id="type">
-                      <SelectValue placeholder="Select appointment type" />
+                <div className="space-y-2">
+                  <Label htmlFor="doctor">Doctor</Label>
+                  <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select a doctor" />
                     </SelectTrigger>
                     <SelectContent>
-                      <SelectItem value="in-person">In-Person Visit</SelectItem>
-                      <SelectItem value="video">Video Consultation</SelectItem>
-                      <SelectItem value="phone">Phone Consultation</SelectItem>
+                      {availableDoctors.map(doctor => (
+                        <SelectItem key={doctor.id} value={doctor.name}>
+                          {doctor.name} - {doctor.specialty}
+                        </SelectItem>
+                      ))}
                     </SelectContent>
                   </Select>
                 </div>
-
-                <div className="space-y-1">
-                  <Label htmlFor="notes">Notes (Optional)</Label>
-                  <Input
-                    id="notes"
-                    placeholder="Add any notes or concerns for your doctor"
+                <div className="space-y-2">
+                  <Label htmlFor="type">Type</Label>
+                  <Select value={selectedType} onValueChange={(value) => setSelectedType(value as 'in-person' | 'video' | 'phone')}>
+                    <SelectTrigger className="w-full">
+                      <SelectValue placeholder="Select appointment type" />
+                    </SelectTrigger>
+                    <SelectContent>
+                      <SelectItem value="in-person">In-person</SelectItem>
+                      <SelectItem value="video">Video</SelectItem>
+                      <SelectItem value="phone">Phone</SelectItem>
+                    </SelectContent>
+                  </Select>
+                </div>
+                <div className="space-y-2">
+                  <span className="text-sm font-medium">Notes:</span>
+                  <textarea 
                     value={appointmentNotes}
                     onChange={(e) => setAppointmentNotes(e.target.value)}
+                    className="w-full h-20 p-2 border rounded-md"
                   />
                 </div>
-
                 <Button 
-                  className="w-full mt-4" 
+                  className="w-full mt-4 bg-blue-600 hover:bg-blue-700 text-white font-semibold rounded-lg shadow-md transition-all duration-200 disabled:opacity-50 disabled:cursor-not-allowed"
                   onClick={bookAppointment}
                   disabled={!date || !selectedTime || !selectedDoctor}
                 >
                   Book Appointment
                 </Button>
-              </CardContent>
-            </Card>
-          </div>
-
-          {date && (
-            <Card>
-              <CardHeader>
-                <CardTitle>Appointments on {format(date, 'MMMM d, yyyy')}</CardTitle>
-              </CardHeader>
-              <CardContent>
-                <div className="space-y-2">
-                  {getAppointmentsForDate(date).length > 0 ? (
-                    getAppointmentsForDate(date).map(app => (
-                      <div key={app.id} className="flex justify-between items-center p-2 border rounded-md">
-                        <div>
-                          <p className="font-medium">{app.time} - {app.doctorName}</p>
-                          <p className="text-sm text-gray-500">{app.specialty}</p>
-                        </div>
-                        <Badge className={app.status === 'scheduled' ? 'bg-green-100 text-green-800' : 
-                                          app.status === 'cancelled' ? 'bg-red-100 text-red-800' : 
-                                          'bg-gray-100 text-gray-800'}>
-                          {app.status.charAt(0).toUpperCase() + app.status.slice(1)}
-                        </Badge>
-                      </div>
-                    ))
-                  ) : (
-                    <p className="text-center text-gray-500">No appointments scheduled for this date.</p>
-                  )}
-                </div>
-              </CardContent>
-            </Card>
-          )}
+              </div>
+            </CardContent>
+          </Card>
         </TabsContent>
 
         <TabsContent value="history" className="space-y-4">
           <Card>
             <CardHeader>
-              <CardTitle>Appointment History</CardTitle>
-              <CardDescription>View your past appointments</CardDescription>
+              <CardTitle className="text-4xl font-bold text-blue-600">Appointment History</CardTitle>
+              <CardDescription className="text-blue-400">View your past appointments</CardDescription>
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
                 {appointments
                   .filter(app => app.status === 'completed' || app.status === 'cancelled')
-                  .sort((a, b) => b.date.getTime() - a.date.getTime())
                   .map(appointment => (
                     <div key={appointment.id} className="flex justify-between items-center p-3 border rounded-md">
                       <div>
@@ -349,7 +454,7 @@ const AppointmentScheduler = () => {
                           {format(appointment.date, 'MMMM d, yyyy')} at {appointment.time}
                         </p>
                       </div>
-                      <Badge className={appointment.status === 'completed' ? 'bg-green-100 text-green-800' : 'bg-red-100 text-red-800'}>
+                      <Badge className={`${statusColors[appointment.status].bg} ${statusColors[appointment.status].text} font-semibold`}>
                         {appointment.status.charAt(0).toUpperCase() + appointment.status.slice(1)}
                       </Badge>
                     </div>
