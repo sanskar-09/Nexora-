@@ -15,7 +15,7 @@ interface DashboardProps {
   onTabChange?: (tab: string, data?: any) => void;
 }
 
-const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
+export default function Dashboard({ userRole, onTabChange }: DashboardProps) {
   const { toast } = useToast();
   const [selectedAppointment, setSelectedAppointment] = useState<number | null>(null);
   const [selectedMedication, setSelectedMedication] = useState<number | null>(null);
@@ -57,11 +57,11 @@ const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
   ];
 
   return (
-    <div className="space-y-6">
+    <div className="bg-gray-900 min-h-screen text-white p-4">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back, John!</h1>
-          <p className="text-gray-600 mt-1">Here's your health overview for today</p>
+          <h1 className="text-3xl font-bold text-white">Welcome back, John!</h1>
+          <p className="text-gray-400 mt-1">Here's your health overview for today</p>
         </div>
         <Badge className="bg-green-100 text-green-800 text-sm px-3 py-1">
           All systems healthy
@@ -69,45 +69,47 @@ const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
       </div>
 
       {/* Health Score Card */}
-      <Card className="border-none shadow-lg">
-        <CardHeader>
-          <CardTitle className="flex items-center space-x-2">
-            <span>Overall Health Score</span>
+      <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+        <div>
+          <div className="flex items-center space-x-2">
+            <h2 className="text-xl font-bold">Overall Health Score</h2>
             <Badge variant="secondary" className="bg-blue-100 text-blue-800">{healthScore}/100</Badge>
-          </CardTitle>
-          <CardDescription>Based on your recent activity and health metrics</CardDescription>
-        </CardHeader>
-        <CardContent>
-          <Progress value={healthScore} className="h-3 mb-4" />
+          </div>
+          <p className="text-gray-400">Based on your recent activity and health metrics</p>
+        </div>
+        <div className="mt-4">
+          <div className="h-3 bg-gray-700 rounded-full mb-4">
+            <div className="bg-blue-600 h-3 rounded-full" style={{ width: `${healthScore}%` }}></div>
+          </div>
           <div className="grid grid-cols-3 gap-4 text-center">
             <div>
-              <p className="text-2xl font-bold text-green-600">92%</p>
+              <p className="text-2xl font-bold text-green-400">92%</p>
               <p className="text-sm text-gray-600">Medication Adherence</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-blue-600">8.5</p>
+              <p className="text-2xl font-bold text-blue-400">8.5</p>
               <p className="text-sm text-gray-600">Sleep Quality</p>
             </div>
             <div>
-              <p className="text-2xl font-bold text-purple-600">7,250</p>
+              <p className="text-2xl font-bold text-purple-400">7,250</p>
               <p className="text-sm text-gray-600">Daily Steps</p>
             </div>
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       {/* Health Metrics Grid */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Health Metrics</CardTitle>
-          <CardDescription>Your latest health measurements</CardDescription>
-        </CardHeader>
-        <CardContent>
+      <div className="bg-gray-800 p-4 rounded-lg border border-gray-700">
+        <div>
+          <h2 className="text-xl font-bold">Health Metrics</h2>
+          <p className="text-gray-400">Your latest health measurements</p>
+        </div>
+        <div className="mt-4">
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {healthMetrics.map((metric, index) => (
-              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+              <div key={index} className="p-3 bg-gray-700 rounded-lg">
                 <div className="flex items-center justify-between mb-1">
-                  <p className="text-sm text-gray-600">{metric.label}</p>
+                  <p className="text-sm text-gray-400">{metric.label}</p>
                   <span className={`text-xs px-2 py-1 rounded-full ${
                     metric.status === 'normal' || metric.status === 'good' ? 'bg-green-100 text-green-800' :
                     metric.status === 'warning' ? 'bg-yellow-100 text-yellow-800' :
@@ -130,8 +132,8 @@ const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
               </div>
             ))}
           </div>
-        </CardContent>
-      </Card>
+        </div>
+      </div>
 
       <div className="grid lg:grid-cols-2 gap-6">
         {/* Upcoming Appointments */}
@@ -198,6 +200,7 @@ const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
                     {med.status === 'on-time' ? 'On Time' : 
                      med.status === 'missed' ? 'Missed' : 'Upcoming'}
                   </Badge>
+                  </Badge>
                   <Button 
                     variant="ghost" 
                     size="sm"
@@ -263,18 +266,75 @@ const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
                 </div>
                 <div className="flex-1">
                   <p className="text-sm font-medium">{activity.description}</p>
-                  <p className="text-xs text-gray-500">{activity.time}</p>
                 </div>
-              </div>
-            ))}
-          </div>
-        </CardContent>
-      </Card>
+                <div className="pt-4">
+                  <p className="text-sm font-medium text-gray-500">Notes</p>
+                  <p className="text-lg">Regular checkup for health monitoring</p>
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline">Reschedule</Button>
+                  <Button variant="destructive">Cancel Appointment</Button>
+                </div>
+              </>
+            );
+          })()}
+        </div>
+      )}
+    </DialogContent>
+  </Dialog>
 
-      {/* Quick Actions */}
-      <Card>
-        <CardHeader>
-          <CardTitle>Quick Actions</CardTitle>
+  {/* Medication Details Dialog */}
+  <Dialog open={isMedicationDetailsDialogOpen} onOpenChange={setIsMedicationDetailsDialogOpen}>
+    <DialogContent>
+      <DialogHeader>
+        <DialogTitle>Medication Details</DialogTitle>
+      </DialogHeader>
+      {selectedMedication && (
+        <div className="space-y-4">
+          {(() => {
+            const medication = recentMedications.find(m => m.id === selectedMedication);
+            if (!medication) return null;
+            
+            return (
+              <>
+                <div className="grid grid-cols-2 gap-4">
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Medication</p>
+                    <p className="text-lg font-medium">{medication.name}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Dosage</p>
+                    <p className="text-lg">{medication.dosage}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Next Dose</p>
+                    <p className="text-lg">{medication.nextDose}</p>
+                  </div>
+                  <div>
+                    <p className="text-sm font-medium text-gray-500">Status</p>
+                    <Badge 
+                      variant={medication.status === 'on-time' ? 'default' : 'secondary'}
+                      className={
+                        medication.status === 'on-time' ? 'bg-green-100 text-green-800' :
+                        medication.status === 'missed' ? 'bg-red-100 text-red-800' :
+                        'bg-blue-100 text-blue-800'
+                      }
+                    >
+                      {medication.status === 'on-time' ? 'On Time' : 
+                       medication.status === 'missed' ? 'Missed' : 'Upcoming'}
+                    </Badge>
+                  </div>
+                </div>
+                <div className="pt-4">
+                  <p className="text-sm font-medium text-gray-500">Instructions</p>
+                  <p className="text-lg">Take with food and water. Avoid alcohol.</p>
+                </div>
+                <div className="pt-4">
+                  <p className="text-sm font-medium text-gray-500">Side Effects</p>
+                  <p className="text-lg">May cause drowsiness. Do not drive or operate heavy machinery.</p>
+                </div>
+                <div className="flex justify-end space-x-2 pt-4">
+                  <Button variant="outline">Set Reminder</Button>
           <CardDescription>Common tasks and shortcuts</CardDescription>
         </CardHeader>
         <CardContent>
@@ -307,7 +367,7 @@ const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
         </CardContent>
       </Card>
       {/* Appointments Dialog */}
-      <Dialog open={isAppointmentsDialogOpen} onOpenChange={setIsAppointmentsDialogOpen}>
+      <Dialog open={isAppointmentsDialogOpen}>
         <DialogContent className="max-w-4xl">
           <DialogHeader>
             <DialogTitle>All Appointments</DialogTitle>
@@ -363,6 +423,102 @@ const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
               Go to Telemedicine
             </Button>
           </DialogFooter>
+        </DialogContent>
+      </Dialog>
+
+      {/* Appointment Details Dialog */}
+      <Dialog open={isAppointmentDetailsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Appointment Details</DialogTitle>
+          </DialogHeader>
+          {selectedAppointment && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Doctor</p>
+                  <p className="text-lg font-medium">{upcomingAppointments.find(a => a.id === selectedAppointment)?.doctor}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Specialty</p>
+                  <p className="text-lg">{upcomingAppointments.find(a => a.id === selectedAppointment)?.specialty}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Date</p>
+                  <p className="text-lg">{upcomingAppointments.find(a => a.id === selectedAppointment)?.date}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Time</p>
+                  <p className="text-lg">{upcomingAppointments.find(a => a.id === selectedAppointment)?.time}</p>
+                </div>
+              </div>
+              <div className="pt-4">
+                <p className="text-sm font-medium text-gray-500">Location</p>
+                <p className="text-lg">Main Hospital, Room 305</p>
+              </div>
+              <div className="pt-4">
+                <p className="text-sm font-medium text-gray-500">Notes</p>
+                <p className="text-lg">Regular checkup for health monitoring</p>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline">Reschedule</Button>
+                <Button variant="destructive">Cancel Appointment</Button>
+              </div>
+            </div>
+          )}
+        </DialogContent>
+      </Dialog>
+
+      {/* Medication Details Dialog */}
+      <Dialog open={isMedicationDetailsDialogOpen}>
+        <DialogContent>
+          <DialogHeader>
+            <DialogTitle>Medication Details</DialogTitle>
+          </DialogHeader>
+          {selectedMedication && (
+            <div className="space-y-4">
+              <div className="grid grid-cols-2 gap-4">
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Medication</p>
+                  <p className="text-lg font-medium">{recentMedications.find(m => m.id === selectedMedication)?.name}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Dosage</p>
+                  <p className="text-lg">{recentMedications.find(m => m.id === selectedMedication)?.dosage}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Next Dose</p>
+                  <p className="text-lg">{recentMedications.find(m => m.id === selectedMedication)?.nextDose}</p>
+                </div>
+                <div>
+                  <p className="text-sm font-medium text-gray-500">Status</p>
+                  <Badge 
+                    variant={recentMedications.find(m => m.id === selectedMedication)?.status === 'on-time' ? 'default' : 'secondary'}
+                    className={
+                      recentMedications.find(m => m.id === selectedMedication)?.status === 'on-time' ? 'bg-green-100 text-green-800' :
+                      recentMedications.find(m => m.id === selectedMedication)?.status === 'missed' ? 'bg-red-100 text-red-800' :
+                      'bg-blue-100 text-blue-800'
+                    }
+                  >
+                    {recentMedications.find(m => m.id === selectedMedication)?.status === 'on-time' ? 'On Time' : 
+                     recentMedications.find(m => m.id === selectedMedication)?.status === 'missed' ? 'Missed' : 'Upcoming'}
+                  </Badge>
+                </div>
+              </div>
+              <div className="pt-4">
+                <p className="text-sm font-medium text-gray-500">Instructions</p>
+                <p className="text-lg">Take with food and water. Avoid alcohol.</p>
+              </div>
+              <div className="pt-4">
+                <p className="text-sm font-medium text-gray-500">Side Effects</p>
+                <p className="text-lg">May cause drowsiness. Do not drive or operate heavy machinery.</p>
+              </div>
+              <div className="flex justify-end space-x-2 pt-4">
+                <Button variant="outline">Set Reminder</Button>
+                <Button variant="destructive">Remove Medication</Button>
+              </div>
+            </div>
+          )}
         </DialogContent>
       </Dialog>
 
@@ -492,4 +648,4 @@ const Dashboard = ({ userRole, onTabChange }: DashboardProps) => {
   );
 };
 
-export default Dashboard;
+
