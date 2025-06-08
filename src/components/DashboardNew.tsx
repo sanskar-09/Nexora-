@@ -37,7 +37,7 @@ interface HealthMetric {
   lastUpdated: string;
 }
 
-export default function Dashboard({ userRole, onTabChange }: DashboardProps) {
+export default function Dashboard({ onTabChange }: DashboardProps) {
   const upcomingAppointments: Appointment[] = [
     {
       id: "1",
