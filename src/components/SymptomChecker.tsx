@@ -14,8 +14,8 @@ import {
   Clock,
   Phone,
   Shield,
-  Lungs,
-  Stomach,
+  Wind,
+  Zap,
   Eye,
   Bone
 } from 'lucide-react';
@@ -126,7 +126,7 @@ const getSymptomAnalysis = (selectedSymptoms: string[]) => {
         'Seek medical care if severe dehydration occurs'
       ],
       urgency: 'low',
-      icon: <Stomach className="w-6 h-6" />,
+      icon: <Zap className="w-6 h-6" />,
       possibleCauses: ['Norovirus', 'Rotavirus', 'Food poisoning', 'Bacterial infection'],
       duration: '2-5 days typically'
     };
@@ -186,7 +186,7 @@ const getSymptomAnalysis = (selectedSymptoms: string[]) => {
         'See doctor if symptoms worsen or persist beyond 10 days'
       ],
       urgency: 'low',
-      icon: <Lungs className="w-6 h-6" />,
+      icon: <Wind className="w-6 h-6" />,
       possibleCauses: ['Rhinovirus', 'Adenovirus', 'Streptococcus bacteria'],
       duration: '7-10 days typically'
     };
@@ -246,7 +246,7 @@ const getSymptomAnalysis = (selectedSymptoms: string[]) => {
         'Seek medical care if symptoms are severe or prolonged'
       ],
       urgency: 'moderate',
-      icon: <Stomach className="w-6 h-6" />,
+      icon: <Zap className="w-6 h-6" />,
       possibleCauses: ['Salmonella', 'E. coli', 'Campylobacter', 'Staphylococcus aureus'],
       duration: '1-7 days depending on cause'
     };
@@ -320,7 +320,7 @@ const getSymptomAnalysis = (selectedSymptoms: string[]) => {
           'Monitor for additional symptoms'
         ],
         urgency: 'low',
-        icon: <Lungs className="w-6 h-6" />,
+        icon: <Wind className="w-6 h-6" />,
         possibleCauses: ['Viral infection', 'Allergies', 'Air pollution', 'Acid reflux', 'Asthma'],
         duration: '1-3 weeks depending on cause'
       }
