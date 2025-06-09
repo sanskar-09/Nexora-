@@ -1,0 +1,10 @@
+<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
+  <rect width="1280" height="720" fill="#ECFDF5"/>
+  <rect x="440" y="160" width="400" height="400" rx="20" fill="#D1FAE5"/>
+  <path d="M600 280H700" stroke="#059669" stroke-width="8" stroke-linecap="round"/>
+  <path d="M650 280V320" stroke="#059669" stroke-width="8" stroke-linecap="round"/>
+  <path d="M600 400C600 400 620 360 650 360C680 360 700 400 700 400" stroke="#059669" stroke-width="8" stroke-linecap="round"/>
+  <path d="M600 400L620 460" stroke="#059669" stroke-width="8" stroke-linecap="round"/>
+  <path d="M700 400L680 460" stroke="#059669" stroke-width="8" stroke-linecap="round"/>
+  <text x="640" y="560" font-family="Arial" font-size="24" text-anchor="middle" fill="#065F46">Proper Lifting Techniques</text>
+</svg>
