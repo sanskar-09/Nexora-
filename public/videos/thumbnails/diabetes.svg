@@ -1,9 +1,0 @@
-<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1280" height="720" fill="#F0FDF4"/>
-  <rect x="440" y="160" width="400" height="400" rx="20" fill="#DCFCE7"/>
-  <circle cx="650" cy="320" r="100" fill="#10B981" fill-opacity="0.2" stroke="#10B981" stroke-width="8"/>
-  <path d="M600 320L640 360L700 280" stroke="#10B981" stroke-width="12" stroke-linecap="round" stroke-linejoin="round"/>
-  <path d="M550 420H750" stroke="#10B981" stroke-width="8" stroke-linecap="round"/>
-  <path d="M650 380V460" stroke="#10B981" stroke-width="8" stroke-linecap="round"/>
-  <text x="640" y="560" font-family="Arial" font-size="24" text-anchor="middle" fill="#065F46">Diabetes Management</text>
-</svg>

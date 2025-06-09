@@ -1,8 +1,0 @@
-<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1280" height="720" fill="#EFF6FF"/>
-  <rect x="440" y="160" width="400" height="400" rx="20" fill="#DBEAFE"/>
-  <path d="M640 260C640 254.477 644.477 250 650 250C655.523 250 660 254.477 660 260V460C660 465.523 655.523 470 650 470C644.477 470 640 465.523 640 460V260Z" fill="#3B82F6"/>
-  <path d="M550 360H750" stroke="#3B82F6" stroke-width="20" stroke-linecap="round"/>
-  <circle cx="650" cy="360" r="150" stroke="#3B82F6" stroke-width="8" stroke-dasharray="15 15"/>
-  <text x="640" y="560" font-family="Arial" font-size="24" text-anchor="middle" fill="#1E3A8A">Understanding Blood Pressure</text>
-</svg>
