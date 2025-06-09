@@ -1,3 +1,6 @@
+
+import React from 'react';
+
 // Animation utility functions for enhancing UI interactions
 
 export type AnimationOptions = {
