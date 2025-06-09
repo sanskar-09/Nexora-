@@ -1,10 +1,44 @@
 
 import React from 'react';
-import { Heart, Shield, Users, Award, Clock, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, Shield, Users, Award, Clock, CheckCircle, ArrowLeft, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const About = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      {/* Navigation Header */}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/')}
+                className="flex items-center space-x-2"
+              >
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+              </Button>
+            </div>
+            <h1 className="text-xl font-bold text-gray-900">About HealthCare Plus</h1>
+            <div className="w-32"></div> {/* Spacer for centering */}
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="relative py-16 mb-16">
@@ -158,6 +192,16 @@ const About = () => {
               We never share your personal health information without your explicit consent. Your data is encrypted, secure, and used solely to provide you with the best possible healthcare experience.
             </p>
           </div>
+        </div>
+
+        {/* Bottom Navigation */}
+        <div className="text-center pt-12 border-t border-gray-200">
+          <Button
+            onClick={() => navigate('/')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+          >
+            Return to Dashboard
+          </Button>
         </div>
       </div>
     </div>
