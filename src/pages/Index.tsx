@@ -1,13 +1,7 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
-import Navigation from '@/components/Navigation';
+import { useLocation, Link } from 'react-router-dom';
 import Dashboard from '@/components/Dashboard';
-import SymptomChecker from '@/components/SymptomChecker';
-import MedicationManager from '@/components/MedicationManager';
-import HealthMonitoring from '@/components/HealthMonitoring';
-import Telemedicine from '@/components/Telemedicine';
-import HealthEducation from '@/components/HealthEducation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -18,43 +12,44 @@ import {
   Award, 
   Clock,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Pill,
+  BookOpen
 } from 'lucide-react';
 
-const Index = () => {
+interface IndexProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const Index = ({ activeTab, setActiveTab }: IndexProps) => {
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Set to true for testing
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [userRole, setUserRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
 
   useEffect(() => {
-    if (location.pathname === '/about') {
-      setActiveTab('about');
+    if (location.pathname === '/') {
+      setActiveTab('dashboard');
     }
-  }, [location]);
+  }, [location, setActiveTab]);
 
-  const renderContent = () => {
-    if (location.pathname === '/about') {
-      return null; // About page is handled by the About component
+  // Quick access links for features not in main navbar
+  const quickLinks = [
+    {
+      icon: Pill,
+      title: "Medication Manager",
+      description: "Track your medications and set reminders",
+      path: "/medication",
+      color: "from-green-500 to-emerald-500"
+    },
+    {
+      icon: BookOpen,
+      title: "Health Education",
+      description: "Learn about health topics and wellness",
+      path: "/education",
+      color: "from-purple-500 to-indigo-500"
     }
-    
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard userRole={userRole} />;
-      case 'symptoms':
-        return <SymptomChecker />;
-      case 'medications':
-        return <MedicationManager />;
-      case 'monitoring':
-        return <HealthMonitoring />;
-      case 'education':
-        return <HealthEducation />;
-      case 'telemedicine':
-        return <Telemedicine />;
-      default:
-        return <Dashboard userRole={userRole} />;
-    }
-  };
+  ];
 
   const features = [
     {
@@ -86,10 +81,8 @@ const Index = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-        <Navigation onAuthChange={setIsAuthenticated} />
-        
         {/* Hero Section */}
-        <div className="container mx-auto px-4 pt-32 pb-20">
+        <div className="container mx-auto px-4 pt-16 pb-20">
           <div className="text-center max-w-4xl mx-auto mb-16">
             <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-6">
               <CheckCircle className="w-4 h-4 mr-2" />
@@ -175,18 +168,33 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation 
-        onAuthChange={setIsAuthenticated} 
-        isAuthenticated={isAuthenticated}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      <main className="pt-16">
-        <div className="container mx-auto px-4 py-8">
-          {renderContent()}
+    <div className="container mx-auto px-4 py-8">
+      {/* Quick Links Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Quick Access</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {quickLinks.map((link, index) => (
+            <Link key={index} to={link.path}>
+              <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-12 h-12 bg-gradient-to-r ${link.color} rounded-lg flex items-center justify-center`}>
+                      <link.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{link.title}</h3>
+                      <p className="text-gray-600 text-sm">{link.description}</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-400 ml-auto" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
         </div>
-      </main>
+      </div>
+
+      <Dashboard userRole={userRole} />
     </div>
   );
 };
