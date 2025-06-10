@@ -1,6 +1,6 @@
 
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, Link } from 'react-router-dom';
 import Dashboard from '@/components/Dashboard';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
@@ -12,7 +12,9 @@ import {
   Award, 
   Clock,
   ArrowRight,
-  CheckCircle
+  CheckCircle,
+  Pill,
+  BookOpen
 } from 'lucide-react';
 
 interface IndexProps {
@@ -30,6 +32,24 @@ const Index = ({ activeTab, setActiveTab }: IndexProps) => {
       setActiveTab('dashboard');
     }
   }, [location, setActiveTab]);
+
+  // Quick access links for features not in main navbar
+  const quickLinks = [
+    {
+      icon: Pill,
+      title: "Medication Manager",
+      description: "Track your medications and set reminders",
+      path: "/medication",
+      color: "from-green-500 to-emerald-500"
+    },
+    {
+      icon: BookOpen,
+      title: "Health Education",
+      description: "Learn about health topics and wellness",
+      path: "/education",
+      color: "from-purple-500 to-indigo-500"
+    }
+  ];
 
   const features = [
     {
@@ -149,6 +169,31 @@ const Index = ({ activeTab, setActiveTab }: IndexProps) => {
 
   return (
     <div className="container mx-auto px-4 py-8">
+      {/* Quick Links Section */}
+      <div className="mb-8">
+        <h2 className="text-2xl font-bold text-gray-900 mb-4">Quick Access</h2>
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+          {quickLinks.map((link, index) => (
+            <Link key={index} to={link.path}>
+              <Card className="hover:shadow-lg transition-all duration-300 hover:-translate-y-1 cursor-pointer">
+                <CardContent className="p-6">
+                  <div className="flex items-center space-x-4">
+                    <div className={`w-12 h-12 bg-gradient-to-r ${link.color} rounded-lg flex items-center justify-center`}>
+                      <link.icon className="w-6 h-6 text-white" />
+                    </div>
+                    <div>
+                      <h3 className="text-lg font-semibold text-gray-900">{link.title}</h3>
+                      <p className="text-gray-600 text-sm">{link.description}</p>
+                    </div>
+                    <ArrowRight className="w-5 h-5 text-gray-400 ml-auto" />
+                  </div>
+                </CardContent>
+              </Card>
+            </Link>
+          ))}
+        </div>
+      </div>
+
       <Dashboard userRole={userRole} />
     </div>
   );
