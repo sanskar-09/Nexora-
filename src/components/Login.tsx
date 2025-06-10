@@ -5,18 +5,23 @@ import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Link } from 'react-router-dom';
-import { LogIn, Mail, Lock, UserPlus, Heart } from 'lucide-react';
+import { LogIn, Mail, Lock, UserPlus, Heart, User } from 'lucide-react';
 
 const Login = () => {
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
+  const [name, setName] = useState('');
   const [isSignUp, setIsSignUp] = useState(false);
   const [confirmPassword, setConfirmPassword] = useState('');
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     if (isSignUp) {
-      console.log('Sign up attempt:', { email, password, confirmPassword });
+      if (password !== confirmPassword) {
+        alert('Passwords do not match');
+        return;
+      }
+      console.log('Sign up attempt:', { name, email, password, confirmPassword });
     } else {
       console.log('Login attempt:', { email, password });
     }
@@ -40,7 +45,7 @@ const Login = () => {
             {isSignUp ? 'Create Account' : 'Welcome Back'}
           </CardTitle>
           <p className="text-gray-600">
-            {isSignUp ? 'Sign up to get started' : 'Sign in to your account to continue'}
+            {isSignUp ? 'Join Nexora to start your health journey' : 'Sign in to your account to continue'}
           </p>
         </CardHeader>
         <CardContent>
@@ -67,6 +72,24 @@ const Login = () => {
           </div>
 
           <form onSubmit={handleSubmit} className="space-y-4">
+            {isSignUp && (
+              <div className="space-y-2">
+                <Label htmlFor="name">Full Name</Label>
+                <div className="relative">
+                  <User className="absolute left-3 top-1/2 transform -translate-y-1/2 text-gray-400 w-4 h-4" />
+                  <Input
+                    id="name"
+                    type="text"
+                    placeholder="Enter your full name"
+                    value={name}
+                    onChange={(e) => setName(e.target.value)}
+                    className="pl-10"
+                    required
+                  />
+                </div>
+              </div>
+            )}
+
             <div className="space-y-2">
               <Label htmlFor="email">Email</Label>
               <div className="relative">
@@ -90,7 +113,7 @@ const Login = () => {
                 <Input
                   id="password"
                   type="password"
-                  placeholder="Enter your password"
+                  placeholder={isSignUp ? "Create a password" : "Enter your password"}
                   value={password}
                   onChange={(e) => setPassword(e.target.value)}
                   className="pl-10"
@@ -117,7 +140,14 @@ const Login = () => {
               </div>
             )}
 
-            <Button type="submit" className="w-full bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800">
+            <Button 
+              type="submit" 
+              className={`w-full ${
+                isSignUp 
+                  ? 'bg-gradient-to-r from-green-600 to-green-700 hover:from-green-700 hover:to-green-800' 
+                  : 'bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800'
+              }`}
+            >
               {isSignUp ? (
                 <>
                   <UserPlus className="w-4 h-4 mr-2" />
@@ -138,12 +168,24 @@ const Login = () => {
               <button
                 type="button"
                 onClick={() => setIsSignUp(!isSignUp)}
-                className="text-blue-600 hover:text-blue-700 font-medium underline"
+                className={`font-medium underline ${
+                  isSignUp 
+                    ? 'text-green-600 hover:text-green-700' 
+                    : 'text-blue-600 hover:text-blue-700'
+                }`}
               >
                 {isSignUp ? 'Sign in' : 'Sign up'}
               </button>
             </p>
           </div>
+
+          {isSignUp && (
+            <div className="mt-4 text-center">
+              <p className="text-sm text-gray-500">
+                By creating an account, you agree to our Terms of Service and Privacy Policy
+              </p>
+            </div>
+          )}
         </CardContent>
       </Card>
     </div>

@@ -34,7 +34,7 @@ const App = () => {
             <Routes>
               {/* Auth routes without navigation */}
               <Route path="/login" element={<Login />} />
-              <Route path="/signup" element={<Signup />} />
+              <Route path="/signup" element={<Login />} />
               <Route path="/create-account" element={<CreateAccount />} />
               
               {/* Routes with navigation */}
