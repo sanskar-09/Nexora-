@@ -2,7 +2,7 @@
 import { Button } from "@/components/ui/button";
 import { Link, useLocation } from "react-router-dom";
 import { useState } from "react";
-import { Menu, X } from "lucide-react";
+import { Menu, X, LogIn, UserPlus } from "lucide-react";
 
 interface NavigationProps {
   onAuthChange?: (isAuthenticated: boolean) => void;
@@ -37,13 +37,13 @@ const Navigation = ({ onAuthChange, isAuthenticated = true, activeTab, onTabChan
       <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
         <div className="flex justify-between h-16">
           <div className="flex items-center">
-            <Link to="/" className="flex items-center" onClick={() => handleNavClick({ tab: "dashboard" })}>
+            <Link to="/create-account" className="flex items-center" onClick={() => handleNavClick({ tab: "create-account" })}>
               <span className="text-xl font-bold text-gray-800">Nexora</span>
             </Link>
           </div>
 
           {/* Desktop Navigation */}
-          <div className="hidden md:flex space-x-4">
+          <div className="hidden md:flex items-center space-x-4">
             {navigationItems.map((item) => (
               <Link
                 key={item.path}
@@ -58,6 +58,22 @@ const Navigation = ({ onAuthChange, isAuthenticated = true, activeTab, onTabChan
                 {item.label}
               </Link>
             ))}
+            
+            {/* Auth Buttons */}
+            <div className="flex items-center space-x-2 ml-4 border-l border-gray-200 pl-4">
+              <Link to="/login">
+                <Button variant="ghost" size="sm">
+                  <LogIn className="w-4 h-4 mr-2" />
+                  Login
+                </Button>
+              </Link>
+              <Link to="/signup">
+                <Button size="sm" className="bg-blue-600 hover:bg-blue-700">
+                  <UserPlus className="w-4 h-4 mr-2" />
+                  Sign Up
+                </Button>
+              </Link>
+            </div>
           </div>
 
           {/* Mobile menu button */}
@@ -90,6 +106,22 @@ const Navigation = ({ onAuthChange, isAuthenticated = true, activeTab, onTabChan
                   {item.label}
                 </Link>
               ))}
+              
+              {/* Mobile Auth Buttons */}
+              <div className="border-t border-gray-200 pt-4 mt-4 space-y-2">
+                <Link to="/login" className="block">
+                  <Button variant="ghost" size="sm" className="w-full justify-start">
+                    <LogIn className="w-4 h-4 mr-2" />
+                    Login
+                  </Button>
+                </Link>
+                <Link to="/signup" className="block">
+                  <Button size="sm" className="w-full bg-blue-600 hover:bg-blue-700">
+                    <UserPlus className="w-4 h-4 mr-2" />
+                    Sign Up
+                  </Button>
+                </Link>
+              </div>
             </div>
           </div>
         )}
