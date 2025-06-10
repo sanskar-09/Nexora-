@@ -183,7 +183,9 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
               </>
             ) : (
               <div className="flex items-center space-x-3">
-                <Button variant="ghost" onClick={handleLogin} className="text-gray-700 hover:bg-blue-50">
+                <Button variant="ghost"
+                onClick={() => navigate('/login')}
+                className="text-gray-700 hover:bg-blue-50">
                   Sign In
                 </Button>
                 <Button 
