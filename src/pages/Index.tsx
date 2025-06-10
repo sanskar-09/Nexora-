@@ -1,13 +1,7 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
-import Navigation from '@/components/Navigation';
 import Dashboard from '@/components/Dashboard';
-import SymptomChecker from '@/components/SymptomChecker';
-import MedicationManager from '@/components/MedicationManager';
-import HealthMonitoring from '@/components/HealthMonitoring';
-import Telemedicine from '@/components/Telemedicine';
-import HealthEducation from '@/components/HealthEducation';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -21,40 +15,21 @@ import {
   CheckCircle
 } from 'lucide-react';
 
-const Index = () => {
+interface IndexProps {
+  activeTab: string;
+  setActiveTab: (tab: string) => void;
+}
+
+const Index = ({ activeTab, setActiveTab }: IndexProps) => {
   const location = useLocation();
-  const [activeTab, setActiveTab] = useState('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Set to true for testing
+  const [isAuthenticated, setIsAuthenticated] = useState(true);
   const [userRole, setUserRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
 
   useEffect(() => {
-    if (location.pathname === '/about') {
-      setActiveTab('about');
+    if (location.pathname === '/') {
+      setActiveTab('dashboard');
     }
-  }, [location]);
-
-  const renderContent = () => {
-    if (location.pathname === '/about') {
-      return null; // About page is handled by the About component
-    }
-    
-    switch (activeTab) {
-      case 'dashboard':
-        return <Dashboard userRole={userRole} />;
-      case 'symptoms':
-        return <SymptomChecker />;
-      case 'medications':
-        return <MedicationManager />;
-      case 'monitoring':
-        return <HealthMonitoring />;
-      case 'education':
-        return <HealthEducation />;
-      case 'telemedicine':
-        return <Telemedicine />;
-      default:
-        return <Dashboard userRole={userRole} />;
-    }
-  };
+  }, [location, setActiveTab]);
 
   const features = [
     {
@@ -86,10 +61,8 @@ const Index = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-        <Navigation onAuthChange={setIsAuthenticated} />
-        
         {/* Hero Section */}
-        <div className="container mx-auto px-4 pt-32 pb-20">
+        <div className="container mx-auto px-4 pt-16 pb-20">
           <div className="text-center max-w-4xl mx-auto mb-16">
             <div className="inline-flex items-center px-4 py-2 bg-blue-100 text-blue-800 rounded-full text-sm font-medium mb-6">
               <CheckCircle className="w-4 h-4 mr-2" />
@@ -175,18 +148,8 @@ const Index = () => {
   }
 
   return (
-    <div className="min-h-screen bg-gray-50">
-      <Navigation 
-        onAuthChange={setIsAuthenticated} 
-        isAuthenticated={isAuthenticated}
-        activeTab={activeTab}
-        onTabChange={setActiveTab}
-      />
-      <main className="pt-16">
-        <div className="container mx-auto px-4 py-8">
-          {renderContent()}
-        </div>
-      </main>
+    <div className="container mx-auto px-4 py-8">
+      <Dashboard userRole={userRole} />
     </div>
   );
 };
