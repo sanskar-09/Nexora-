@@ -1,4 +1,3 @@
-
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -25,6 +24,7 @@ import {
 import { authService } from "@/services/api";
 import { useState } from "react";
 import { useNavigate } from 'react-router-dom';
+import { useAuth } from '@/contexts/AuthContext';
 
 interface NavigationProps {
   onAuthChange: (isAuth: boolean) => void;
@@ -42,11 +42,6 @@ interface MenuItem {
 
 // Updated core navigation items without dashboard
 const coreMenuItems: MenuItem[] = [
-  {
-    id: 'profile',
-    title: "Profile",
-    icon: User,
-  },
   {
     id: 'symptoms',
     title: "Symptoms",
@@ -73,26 +68,19 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
   const [user, setUser] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
+  const { logout } = useAuth();
 
-  const handleLogin = async () => {
-    try {
-      const email = prompt("Enter your email");
-      const password = prompt("Enter your password");
-      if (email && password) {
-        const userData = await authService.login(email, password);
-        setUser(userData);
-        onAuthChange(true);
-      }
-    } catch (error) {
-      console.error("Login error:", error);
-      alert("Login failed. Please check your credentials.");
-    }
+  const handleLogin = () => {
+    navigate('/login');
   };
 
-  const handleLogout = () => {
-    authService.logout();
-    setUser(null);
-    onAuthChange(false);
+  const handleLogout = async () => {
+    try {
+      await logout(); // Use the logout function from AuthContext
+      onAuthChange(false);
+    } catch (error) {
+      console.error("Logout failed:", error);
+    }
   };
 
   const handleTabChange = (tab: string) => {
@@ -220,12 +208,7 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
                 </Button>
                 <Button 
                   className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md"
-                  onClick={() => authService.register({
-                    name: prompt("Enter your name"),
-                    email: prompt("Enter your email"),
-                    password: prompt("Enter your password"),
-                    role: 'patient'
-                  }).then(() => handleLogin())}
+                  onClick={() => navigate('/login')}
                 >
                   Get Started
                 </Button>
@@ -249,19 +232,26 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
                       : "hover:bg-blue-50 text-gray-700"
                   }`}
                 >
-                  <item.icon className="w-4 h-4 mr-3" />
-                  {item.title}
+                  <item.icon className="w-4 h-4" />
+                  <span className="font-medium">{item.title}</span>
                 </Button>
               ))}
               <Button
                 variant="ghost"
-                onClick={() => {
-                  navigate('/about');
-                  setMobileMenuOpen(false);
-                }}
-                className="justify-start text-gray-700 hover:bg-blue-50"
+                size="sm"
+                onClick={() => navigate('/about')}
+                className="text-gray-700 hover:bg-blue-50"
               >
                 About
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={handleLogout}
+                className="justify-start text-red-600 hover:bg-red-50"
+              >
+                <LogOut className="w-4 h-4 mr-2" />
+                Sign out
               </Button>
             </div>
           </div>

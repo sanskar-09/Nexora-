@@ -8,6 +8,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { format, parseISO } from 'date-fns';
 import { toast } from "@/components/ui/use-toast";
 import UploadRecords from './UploadRecords';
+import { healthDataService } from '@/services/api';
 
 interface RecordMetadata {
   type: 'lab_result' | 'imaging' | 'visit_summary' | 'vaccination' | 'prescription';
@@ -209,37 +210,40 @@ const MedicalRecords = () => {
   };
 
   const handleFileUpload = async (file: File, metadata: RecordMetadata) => {
-    try {
-      // Here you would typically upload the file to your backend/storage
-      // For now, we'll simulate the upload with a timeout
-      await new Promise(resolve => setTimeout(resolve, 1000));
-
-      // Create a new record with the uploaded file
+    const reader = new FileReader();
+    reader.onload = async (e) => {
+      const fileContent = e.target?.result as string;
       const newRecord: MedicalRecord = {
         id: records.length + 1,
         type: metadata.type,
         title: metadata.title,
         date: metadata.date,
         provider: metadata.provider,
-        status: 'completed',
-        details: `Uploaded ${file.name}`,
-        attachmentUrl: URL.createObjectURL(file)
+        status: 'normal',
+        details: `Uploaded via app. Content preview: ${fileContent.substring(0, 50)}...`,
+        attachmentUrl: '#' // Placeholder for actual file URL
       };
 
-      // Add the new record to the list
-      setRecords(prev => [newRecord, ...prev]);
+      try {
+        // Simulate API call to upload record
+        // await new Promise(resolve => setTimeout(resolve, 1000));
+        await healthDataService.addHealthData({ type: "MedicalRecord", data: newRecord, fileContent });
 
-      toast({
-        title: "Upload successful",
-        description: "Your medical record has been uploaded successfully.",
-      });
-    } catch (error) {
-      toast({
-        title: "Upload failed",
-        description: "There was an error uploading your medical record. Please try again.",
-        variant: "destructive"
-      });
-    }
+        setRecords(prev => [...prev, newRecord]);
+        toast({
+          title: "File Uploaded",
+          description: `${file.name} has been successfully uploaded as a ${metadata.type} record.`,
+        });
+      } catch (error) {
+        console.error("Error uploading file:", error);
+        toast({
+          title: "Upload Failed",
+          description: "There was an error uploading your file. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+    reader.readAsText(file);
   };
 
   const handleDownload = (record: MedicalRecord) => {

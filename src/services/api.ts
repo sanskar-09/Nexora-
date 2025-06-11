@@ -18,6 +18,12 @@ export const authService = {
     return response.data.user;
   },
 
+  loginWithPhone: async (phoneNumber: string) => {
+    const response = await axios.post(`${API_URL}/auth/phone-login`, { phoneNumber });
+    localStorage.setItem('token', response.data.token);
+    return response.data.user;
+  },
+
   register: async (userData: any) => {
     const response = await axios.post(`${API_URL}/auth/register`, userData);
     localStorage.setItem('token', response.data.token);

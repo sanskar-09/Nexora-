@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -13,6 +12,7 @@ import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, Di
 import { useToast } from "@/components/ui/use-toast";
 import { User, Phone, Mail, MapPin, Calendar as CalendarIcon, Edit, Save, X } from 'lucide-react';
 import { format, parseISO } from 'date-fns';
+import { healthDataService } from '@/services/api';
 
 interface PatientInfo {
   id: string;
@@ -101,7 +101,8 @@ const PatientProfile = () => {
     setIsLoading(true);
     try {
       // Simulate API call
-      await new Promise(resolve => setTimeout(resolve, 1000));
+      // await new Promise(resolve => setTimeout(resolve, 1000)); // Remove mock delay
+      await healthDataService.addHealthData(patientInfo); // Use actual service
       
       setIsEditing(false);
       toast({

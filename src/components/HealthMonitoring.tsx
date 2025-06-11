@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
@@ -6,6 +5,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar, AreaChart, Area } from 'recharts';
+import { healthDataService } from '@/services/api';
 
 const HealthMonitoring = () => {
   interface Vitals {
@@ -160,15 +160,23 @@ const HealthMonitoring = () => {
     { metric: 'Exercise', target: '5 days/week', current: '4 days', progress: 80, unit: 'days' }
   ];
 
-  const logVitals = () => {
+  const logVitals = async () => {
     console.log('Logging vitals:', vitals);
+    try {
+      await healthDataService.addHealthData({ type: "Vitals", data: vitals, timestamp: new Date().toISOString() });
+      // Optionally, fetch updated data or show a success toast
+      console.log("Vitals logged successfully!");
+    } catch (error) {
+      console.error("Failed to log vitals:", error);
+      // Optionally, show an error toast
+    }
     // Reset form
     setVitals({
-      bloodPressure: { systolic: '', diastolic: '' },
+      bloodPressure: { systolic: '', diastolic: '', },
       heartRate: '',
       weight: '',
       bloodSugar: '',
-      temperature: ''
+      temperature: '',
     });
   };
 

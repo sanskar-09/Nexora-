@@ -1,6 +1,5 @@
-
 import { useState, useEffect } from 'react';
-import { useLocation } from 'react-router-dom';
+import { useLocation, useNavigate } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Dashboard from '@/components/Dashboard';
 import PatientProfile from '@/components/PatientProfile';
@@ -25,6 +24,7 @@ import {
 
 const Index = () => {
   const location = useLocation();
+  const navigate = useNavigate();
   const [activeTab, setActiveTab] = useState('dashboard');
   const { isAuthenticated, user } = useAuth();
 
@@ -116,6 +116,7 @@ const Index = () => {
               <Button 
                 size="lg"
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
+                onClick={() => navigate('/login')}
               >
                 Start Your Health Journey
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -189,6 +190,7 @@ const Index = () => {
               size="lg"
               variant="secondary"
               className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold shadow-lg"
+              onClick={() => navigate('/login')}
             >
               Get Started Today
             </Button>

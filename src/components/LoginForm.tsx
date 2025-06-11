@@ -1,21 +1,76 @@
-
-import React, { useState } from 'react';
+import { useState } from 'react';
+import { useNavigate } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Label } from '@/components/ui/label';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Eye, EyeOff, Shield } from 'lucide-react';
-import { authService } from '@/services/api';
+import { Eye, EyeOff, Shield, Phone } from 'lucide-react';
+import { useAuth } from '@/contexts/AuthContext';
+import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { useToast } from "@/components/ui/use-toast";
 
 const LoginForm = () => {
+  const navigate = useNavigate();
+  const { login, loginWithGoogle, loginWithPhone } = useAuth();
+  const { toast } = useToast();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [showPassword, setShowPassword] = useState(false);
+  const [phoneNumber, setPhoneNumber] = useState('');
+  const [verificationCode, setVerificationCode] = useState('');
+  const [showVerification, setShowVerification] = useState(false);
 
-  const handleLogin = (e: React.FormEvent) => {
+  const handleLogin = async (e: React.FormEvent) => {
     e.preventDefault();
-    console.log('Login attempt:', { email, password });
-    authService.login(email, password);
+    try {
+      await login(email, password);
+      toast({
+        title: "Success",
+        description: "You have been logged in successfully.",
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log in. Please check your credentials.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handleGoogleLogin = async () => {
+    try {
+      await loginWithGoogle();
+      toast({
+        title: "Success",
+        description: "You have been logged in with Google successfully.",
+      });
+      navigate('/');
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to log in with Google.",
+        variant: "destructive",
+      });
+    }
+  };
+
+  const handlePhoneLogin = async (e: React.FormEvent) => {
+    e.preventDefault();
+    try {
+      await loginWithPhone(phoneNumber);
+      setShowVerification(true);
+      toast({
+        title: "Verification Code Sent",
+        description: "Please check your phone for the verification code.",
+      });
+    } catch (error) {
+      toast({
+        title: "Error",
+        description: "Failed to send verification code.",
+        variant: "destructive",
+      });
+    }
   };
 
   return (
@@ -36,72 +91,134 @@ const LoginForm = () => {
       </CardHeader>
 
       <CardContent className="space-y-6 relative">
-        <form onSubmit={handleLogin} className="space-y-6">
-          <div className="space-y-2">
-            <Label htmlFor="email" className="text-sm font-medium text-gray-700">
-              Email address
-            </Label>
-            <Input
-              id="email"
-              type="email"
-              placeholder="Enter your email"
-              value={email}
-              onChange={(e) => setEmail(e.target.value)}
-              className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
-              required
-            />
-          </div>
+        <Tabs defaultValue="email" className="w-full">
+          <TabsList className="grid w-full grid-cols-2">
+            <TabsTrigger value="email">Email</TabsTrigger>
+            <TabsTrigger value="phone">Phone</TabsTrigger>
+          </TabsList>
+          
+          <TabsContent value="email">
+            <form onSubmit={handleLogin} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="email" className="text-sm font-medium text-gray-700">
+                  Email address
+                </Label>
+                <Input
+                  id="email"
+                  type="email"
+                  placeholder="Enter your email"
+                  value={email}
+                  onChange={(e) => setEmail(e.target.value)}
+                  className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                  required
+                />
+              </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="password" className="text-sm font-medium text-gray-700">
-              Password
-            </Label>
-            <div className="relative">
-              <Input
-                id="password"
-                type={showPassword ? 'text' : 'password'}
-                placeholder="Enter your password"
-                value={password}
-                onChange={(e) => setPassword(e.target.value)}
-                className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 pr-12"
-                required
-              />
+              <div className="space-y-2">
+                <Label htmlFor="password" className="text-sm font-medium text-gray-700">
+                  Password
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="password"
+                    type={showPassword ? 'text' : 'password'}
+                    placeholder="Enter your password"
+                    value={password}
+                    onChange={(e) => setPassword(e.target.value)}
+                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 pr-12"
+                    required
+                  />
+                  <Button
+                    type="button"
+                    variant="ghost"
+                    size="sm"
+                    className="absolute right-1 top-1/2 transform -translate-y-1/2 h-10 w-10 text-gray-400 hover:text-gray-600"
+                    onClick={() => setShowPassword(!showPassword)}
+                  >
+                    {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                  </Button>
+                </div>
+              </div>
+
+              <div className="flex items-center justify-between">
+                <div className="flex items-center space-x-2">
+                  <input
+                    id="remember"
+                    type="checkbox"
+                    className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
+                  />
+                  <Label htmlFor="remember" className="text-sm text-gray-600">
+                    Remember me
+                  </Label>
+                </div>
+                <Button 
+                  variant="link" 
+                  className="text-sm text-blue-600 hover:text-blue-700 p-0"
+                  onClick={() => navigate('/forgot-password')}
+                >
+                  Forgot password?
+                </Button>
+              </div>
+
               <Button
-                type="button"
-                variant="ghost"
-                size="sm"
-                className="absolute right-1 top-1/2 transform -translate-y-1/2 h-10 w-10 text-gray-400 hover:text-gray-600"
-                onClick={() => setShowPassword(!showPassword)}
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl relative overflow-hidden group"
               >
-                {showPassword ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+                <span className="relative z-10">Sign in with Email</span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
               </Button>
-            </div>
-          </div>
+            </form>
+          </TabsContent>
 
-          <div className="flex items-center justify-between">
-            <div className="flex items-center space-x-2">
-              <input
-                id="remember"
-                type="checkbox"
-                className="w-4 h-4 text-blue-600 bg-gray-100 border-gray-300 rounded focus:ring-blue-500"
-              />
-              <Label htmlFor="remember" className="text-sm text-gray-600">
-                Remember me
-              </Label>
-            </div>
-            <Button variant="link" className="text-sm text-blue-600 hover:text-blue-700 p-0">
-              Forgot password?
-            </Button>
-          </div>
+          <TabsContent value="phone">
+            <form onSubmit={handlePhoneLogin} className="space-y-6">
+              <div className="space-y-2">
+                <Label htmlFor="phone" className="text-sm font-medium text-gray-700">
+                  Phone Number
+                </Label>
+                <div className="relative">
+                  <Input
+                    id="phone"
+                    type="tel"
+                    placeholder="Enter your phone number"
+                    value={phoneNumber}
+                    onChange={(e) => setPhoneNumber(e.target.value)}
+                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500 pl-12"
+                    required
+                  />
+                  <Phone className="absolute left-4 top-1/2 transform -translate-y-1/2 w-5 h-5 text-gray-400" />
+                </div>
+              </div>
 
-          <Button
-            type="submit"
-            className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl relative overflow-hidden group"
-          >
-            <span className="relative z-10">Sign in to Nexora</span>
-            <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
-          </Button>
-        </form>
+              {showVerification && (
+                <div className="space-y-2">
+                  <Label htmlFor="verification" className="text-sm font-medium text-gray-700">
+                    Verification Code
+                  </Label>
+                  <Input
+                    id="verification"
+                    type="text"
+                    placeholder="Enter verification code"
+                    value={verificationCode}
+                    onChange={(e) => setVerificationCode(e.target.value)}
+                    className="h-12 border-gray-200 focus:border-blue-500 focus:ring-blue-500"
+                    required
+                  />
+                </div>
+              )}
+
+              <Button
+                type="submit"
+                className="w-full h-12 bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white font-medium rounded-lg transition-all duration-200 shadow-lg hover:shadow-xl relative overflow-hidden group"
+              >
+                <span className="relative z-10">
+                  {showVerification ? 'Verify Code' : 'Send Verification Code'}
+                </span>
+                <div className="absolute inset-0 bg-gradient-to-r from-blue-500/20 to-transparent opacity-0 group-hover:opacity-100 transition-opacity duration-200"></div>
+              </Button>
+            </form>
+          </TabsContent>
+        </Tabs>
 
         <div className="relative">
           <div className="absolute inset-0 flex items-center">
@@ -113,7 +230,11 @@ const LoginForm = () => {
         </div>
 
         <div className="grid grid-cols-2 gap-3">
-          <Button variant="outline" className="h-12 border-gray-200 hover:bg-gray-50 group">
+          <Button 
+            variant="outline" 
+            className="h-12 border-gray-200 hover:bg-gray-50 group"
+            onClick={handleGoogleLogin}
+          >
             <svg className="w-5 h-5 mr-2 group-hover:scale-110 transition-transform" viewBox="0 0 24 24">
               <path fill="currentColor" d="M22.56 12.25c0-.78-.07-1.53-.2-2.25H12v4.26h5.92c-.26 1.37-1.04 2.53-2.21 3.31v2.77h3.57c2.08-1.92 3.28-4.74 3.28-8.09z"/>
               <path fill="currentColor" d="M12 23c2.97 0 5.46-.98 7.28-2.66l-3.57-2.77c-.98.66-2.23 1.06-3.71 1.06-2.86 0-5.29-1.93-6.16-4.53H2.18v2.84C3.99 20.53 7.7 23 12 23z"/>
@@ -132,7 +253,11 @@ const LoginForm = () => {
 
         <p className="text-center text-sm text-gray-600">
           Don't have an account?{' '}
-          <Button variant="link" className="text-blue-600 hover:text-blue-700 p-0 font-medium hover:underline">
+          <Button 
+            variant="link" 
+            className="text-blue-600 hover:text-blue-700 p-0 font-medium hover:underline"
+            onClick={() => navigate('/register')}
+          >
             Sign up for free
           </Button>
         </p>

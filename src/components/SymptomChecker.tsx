@@ -1,5 +1,4 @@
-
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Checkbox } from '@/components/ui/checkbox';
@@ -20,8 +19,11 @@ import {
   Bone,
   Activity,
   Droplets,
-  Pill
+  Pill,
+  History,
+  Info
 } from 'lucide-react';
+import { symptomService } from '@/services/api';
 
 const symptoms = [
   { id: 'fever', label: 'Fever', category: 'general' },
@@ -430,33 +432,59 @@ const getSymptomAnalysis = (selectedSymptoms: string[]) => {
 
 const SymptomChecker = () => {
   const [selectedSymptoms, setSelectedSymptoms] = useState<string[]>([]);
-  const [analysis, setAnalysis] = useState<any>(null);
-  const [isAnalyzing, setIsAnalyzing] = useState(false);
+  const [analysisResult, setAnalysisResult] = useState<any>(null);
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+  const [symptomHistory, setSymptomHistory] = useState<any[]>([]);
 
-  const handleSymptomChange = (symptomId: string, checked: boolean) => {
-    if (checked) {
-      setSelectedSymptoms(prev => [...prev, symptomId]);
-    } else {
-      setSelectedSymptoms(prev => prev.filter(id => id !== symptomId));
+  useEffect(() => {
+    fetchSymptomHistory();
+  }, []);
+
+  const fetchSymptomHistory = async () => {
+    try {
+      const history = await symptomService.getSymptomHistory();
+      setSymptomHistory(history.data);
+    } catch (err) {
+      console.error("Failed to fetch symptom history:", err);
+      setError("Failed to load symptom history.");
     }
   };
 
-  const analyzeSymptoms = () => {
-    if (selectedSymptoms.length === 0) return;
-    
-    setIsAnalyzing(true);
-    
-    // Simulate analysis time for better UX
-    setTimeout(() => {
-      const result = getSymptomAnalysis(selectedSymptoms);
-      setAnalysis(result);
-      setIsAnalyzing(false);
-    }, 1500);
+  const handleSymptomChange = (symptomId: string, checked: boolean) => {
+    setSelectedSymptoms(prev =>
+      checked ? [...prev, symptomId] : prev.filter(id => id !== symptomId)
+    );
+    setAnalysisResult(null);
+    setError(null);
+  };
+
+  const analyzeSymptoms = async () => {
+    if (selectedSymptoms.length === 0) {
+      setError("Please select at least one symptom.");
+      setAnalysisResult(null);
+      return;
+    }
+
+    setLoading(true);
+    setError(null);
+    try {
+      const result = await symptomService.checkSymptoms(selectedSymptoms);
+      setAnalysisResult(result);
+      fetchSymptomHistory(); // Refresh history after new analysis
+    } catch (err) {
+      console.error("Symptom analysis failed:", err);
+      setError("Failed to analyze symptoms. Please try again.");
+      setAnalysisResult(null);
+    } finally {
+      setLoading(false);
+    }
   };
 
   const clearSelection = () => {
     setSelectedSymptoms([]);
-    setAnalysis(null);
+    setAnalysisResult(null);
+    setError(null);
   };
 
   const getUrgencyColor = (urgency: string) => {
@@ -549,10 +577,10 @@ const SymptomChecker = () => {
               <div className="mt-8 flex gap-3">
                 <Button 
                   onClick={analyzeSymptoms} 
-                  disabled={selectedSymptoms.length === 0 || isAnalyzing}
+                  disabled={selectedSymptoms.length === 0 || loading}
                   className="flex-1 bg-gradient-to-r from-blue-600 to-green-600 hover:from-blue-700 hover:to-green-700 text-white font-semibold py-3"
                 >
-                  {isAnalyzing ? (
+                  {loading ? (
                     <>
                       <Activity className="w-4 h-4 mr-2 animate-spin" />
                       Analyzing Symptoms...
@@ -602,7 +630,7 @@ const SymptomChecker = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
-              {!analysis ? (
+              {!analysisResult ? (
                 <div className="text-center py-16 text-gray-500">
                   <div className="w-24 h-24 mx-auto mb-6 bg-gradient-to-br from-blue-100 to-purple-100 rounded-full flex items-center justify-center">
                     <Stethoscope className="w-12 h-12 text-blue-600" />
@@ -616,13 +644,13 @@ const SymptomChecker = () => {
                   <div className="flex items-start justify-between">
                     <div className="flex items-start space-x-4">
                       <div className="p-3 bg-gradient-to-br from-blue-500 to-purple-500 rounded-lg text-white">
-                        {analysis.icon}
+                        {analysisResult.icon}
                       </div>
                       <div>
-                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{analysis.condition}</h3>
-                        <Badge variant={getUrgencyColor(analysis.urgency)} className="text-sm">
-                          {getUrgencyIcon(analysis.urgency)}
-                          <span className="ml-2 capitalize">{analysis.urgency} Priority</span>
+                        <h3 className="text-2xl font-bold text-gray-900 mb-2">{analysisResult.condition}</h3>
+                        <Badge variant={getUrgencyColor(analysisResult.urgency)} className="text-sm">
+                          {getUrgencyIcon(analysisResult.urgency)}
+                          <span className="ml-2 capitalize">{analysisResult.urgency} Priority</span>
                         </Badge>
                       </div>
                     </div>
@@ -632,20 +660,20 @@ const SymptomChecker = () => {
                   <div className="bg-gradient-to-r from-blue-50 to-purple-50 p-5 rounded-lg border border-blue-200">
                     <h4 className="font-semibold text-gray-900 mb-2 flex items-center">
                       <Thermometer className="w-4 h-4 mr-2" />
-                      Severity: {analysis.severity}
+                      Severity: {analysisResult.severity}
                     </h4>
-                    <p className="text-gray-700 leading-relaxed">{analysis.description}</p>
+                    <p className="text-gray-700 leading-relaxed">{analysisResult.description}</p>
                   </div>
 
                   {/* Possible Causes */}
-                  {analysis.possibleCauses && (
+                  {analysisResult.possibleCauses && (
                     <div className="bg-yellow-50 p-5 rounded-lg border border-yellow-200">
                       <h4 className="font-semibold text-gray-900 mb-3 flex items-center">
                         <Eye className="w-4 h-4 mr-2" />
                         Possible Causes:
                       </h4>
                       <ul className="grid grid-cols-1 sm:grid-cols-2 gap-2">
-                        {analysis.possibleCauses.map((cause: string, index: number) => (
+                        {analysisResult.possibleCauses.map((cause: string, index: number) => (
                           <li key={index} className="flex items-center text-sm text-gray-700">
                             <div className="w-2 h-2 bg-yellow-500 rounded-full mr-2 flex-shrink-0"></div>
                             {cause}
@@ -656,11 +684,11 @@ const SymptomChecker = () => {
                   )}
 
                   {/* Duration */}
-                  {analysis.duration && (
+                  {analysisResult.duration && (
                     <div className="bg-green-50 p-4 rounded-lg border border-green-200">
                       <h4 className="font-semibold text-gray-900 text-sm flex items-center">
                         <Clock className="w-4 h-4 mr-2" />
-                        Expected Duration: {analysis.duration}
+                        Expected Duration: {analysisResult.duration}
                       </h4>
                     </div>
                   )}
@@ -672,7 +700,7 @@ const SymptomChecker = () => {
                       Recommended Actions:
                     </h4>
                     <div className="space-y-3">
-                      {analysis.recommendations.map((rec: string, index: number) => (
+                      {analysisResult.recommendations.map((rec: string, index: number) => (
                         <div key={index} className="flex items-start space-x-3 p-3 bg-gray-50 rounded-lg">
                           <div className="w-6 h-6 bg-blue-600 rounded-full flex items-center justify-center flex-shrink-0 mt-0.5">
                             <span className="text-white text-xs font-bold">{index + 1}</span>
@@ -684,7 +712,7 @@ const SymptomChecker = () => {
                   </div>
                   
                   {/* Emergency Alert */}
-                  {analysis.urgency === 'high' && (
+                  {analysisResult.urgency === 'high' && (
                     <Alert className="border-red-300 bg-red-50">
                       <AlertTriangle className="h-5 w-5 text-red-600" />
                       <AlertDescription className="text-red-800 font-medium">
@@ -709,6 +737,35 @@ const SymptomChecker = () => {
             </CardContent>
           </Card>
         </div>
+
+        {/* Symptom History */}
+        <Card>
+          <CardHeader>
+            <CardTitle className="flex items-center space-x-2">
+              <History className="w-5 h-5" />
+              <span>Symptom History</span>
+            </CardTitle>
+            <CardDescription>Review your past symptom analysis results.</CardDescription>
+          </CardHeader>
+          <CardContent>
+            {symptomHistory.length > 0 ? (
+              <div className="space-y-4">
+                {symptomHistory.map((entry, index) => (
+                  <Alert key={index} variant={entry.severity === 'Critical' ? 'destructive' : 'default'}>
+                    <Info className="w-4 h-4" />
+                    <AlertDescription className="font-medium">
+                      <p><strong>{entry.condition}</strong> - {entry.date}</p>
+                      <p className="text-sm text-gray-700">Symptoms: {entry.symptoms.join(', ')}</p>
+                      <p className="text-sm text-gray-700">Severity: {entry.severity}</p>
+                    </AlertDescription>
+                  </Alert>
+                ))}
+              </div>
+            ) : (
+              <p className="text-sm text-gray-500">No symptom history found.</p>
+            )}
+          </CardContent>
+        </Card>
 
         {/* Medical Disclaimer */}
         <Card className="mt-12 bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300 shadow-lg">
