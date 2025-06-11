@@ -1,7 +1,10 @@
 
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
+<<<<<<< HEAD
 import Navigation from '@/components/Navigation';
+=======
+>>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
 import Dashboard from '@/components/Dashboard';
 import SymptomChecker from '@/components/SymptomChecker';
 import MedicationManager from '@/components/MedicationManager';
@@ -33,6 +36,7 @@ const Index = () => {
     }
   }, [location]);
 
+<<<<<<< HEAD
   const renderContent = () => {
     if (location.pathname === '/about') {
       return null; // About page is handled by the About component
@@ -56,6 +60,8 @@ const Index = () => {
     }
   };
 
+=======
+>>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
   const features = [
     {
       icon: Stethoscope,
@@ -175,6 +181,7 @@ const Index = () => {
   }
 
   return (
+<<<<<<< HEAD
     <div className="min-h-screen bg-gray-50">
       <Navigation 
         onAuthChange={setIsAuthenticated} 
@@ -187,6 +194,10 @@ const Index = () => {
           {renderContent()}
         </div>
       </main>
+=======
+    <div className="container mx-auto px-4 py-8">
+      <Dashboard userRole={userRole} />
+>>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
     </div>
   );
 };
