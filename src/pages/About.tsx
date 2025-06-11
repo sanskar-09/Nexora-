@@ -1,98 +1,133 @@
+
 import React from 'react';
+import { Heart, Shield, Users, Award, Clock, CheckCircle } from 'lucide-react';
 
 const About = () => {
   return (
-    <div className="min-h-screen bg-gray-50">
+    <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
       <div className="container mx-auto px-4 py-12">
         {/* Hero Section */}
-        <div className="relative py-12 sm:py-16">
-          <div className="absolute inset-0 bg-gradient-to-r from-cyan-400 to-light-blue-500 shadow-lg transform -skew-y-6 sm:skew-y-0 sm:-rotate-6 sm:rounded-3xl"></div>
-          <div className="relative max-w-4xl mx-auto px-4">
-            <h1 className="text-4xl font-bold text-white text-center mb-6">About Our Website</h1>
-            <p className="text-xl text-white text-center">
-              Your trusted healthcare information platform
+        <div className="relative py-16 mb-16">
+          <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 shadow-2xl transform -skew-y-1 rounded-3xl"></div>
+          <div className="relative max-w-4xl mx-auto px-8 text-center">
+            <Heart className="w-16 h-16 text-white mx-auto mb-6" />
+            <h1 className="text-5xl font-bold text-white mb-6">About Nexora</h1>
+            <p className="text-xl text-blue-100 mb-8 leading-relaxed">
+              Your comprehensive digital health companion, empowering you to take control of your wellness journey through cutting-edge technology and personalized care.
             </p>
+            <div className="flex justify-center items-center space-x-8 text-blue-100">
+              <div className="flex items-center">
+                <Users className="w-6 h-6 mr-2" />
+                <span className="font-semibold">50,000+ Users</span>
+              </div>
+              <div className="flex items-center">
+                <Award className="w-6 h-6 mr-2" />
+                <span className="font-semibold">Medical Grade</span>
+              </div>
+            </div>
           </div>
         </div>
 
-        {/* Features Section */}
-        <div className="py-12">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Key Features</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Health Information</h3>
-                <p className="text-gray-600">
-                  Access comprehensive medical information about various health conditions, symptoms, and treatments.
+        {/* Mission Statement */}
+        <div className="max-w-4xl mx-auto mb-16 text-center">
+          <h2 className="text-3xl font-bold text-gray-900 mb-6">Our Mission</h2>
+          <p className="text-lg text-gray-700 leading-relaxed">
+            We believe healthcare should be accessible, personalized, and empowering. Our platform bridges the gap between patients and healthcare providers, offering intelligent symptom analysis, comprehensive health monitoring, and seamless telemedicine experiences.
+          </p>
+        </div>
+
+        {/* Key Features */}
+        <div className="py-16 bg-white rounded-3xl shadow-lg mb-16">
+          <div className="max-w-6xl mx-auto px-8">
+            <h2 className="text-4xl font-bold text-gray-900 mb-12 text-center">Comprehensive Health Solutions</h2>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-8">
+              <div className="p-6 bg-gradient-to-br from-blue-50 to-cyan-50 rounded-xl hover:shadow-lg transition-all duration-300">
+                <div className="w-12 h-12 bg-blue-600 rounded-lg flex items-center justify-center mb-4">
+                  <Heart className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">AI Symptom Analysis</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Advanced AI-powered symptom checker that analyzes your symptoms and provides preliminary health insights based on medical databases.
                 </p>
               </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Medication Guide</h3>
-                <p className="text-gray-600">
-                  Detailed information about medications, including uses, side effects, and interactions.
+              
+              <div className="p-6 bg-gradient-to-br from-green-50 to-emerald-50 rounded-xl hover:shadow-lg transition-all duration-300">
+                <div className="w-12 h-12 bg-green-600 rounded-lg flex items-center justify-center mb-4">
+                  <Shield className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Health Monitoring</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Track vital signs, medication schedules, and health metrics with intuitive dashboards and personalized insights.
                 </p>
               </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Health Tips</h3>
-                <p className="text-gray-600">
-                  Practical health tips and advice from medical professionals to help you maintain a healthy lifestyle.
+
+              <div className="p-6 bg-gradient-to-br from-purple-50 to-indigo-50 rounded-xl hover:shadow-lg transition-all duration-300">
+                <div className="w-12 h-12 bg-purple-600 rounded-lg flex items-center justify-center mb-4">
+                  <Users className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Telemedicine</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Connect with certified healthcare professionals through secure video consultations and digital prescriptions.
                 </p>
               </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Medical Resources</h3>
-                <p className="text-gray-600">
-                  Links to trusted medical resources and organizations for further information and support.
+
+              <div className="p-6 bg-gradient-to-br from-orange-50 to-red-50 rounded-xl hover:shadow-lg transition-all duration-300">
+                <div className="w-12 h-12 bg-orange-600 rounded-lg flex items-center justify-center mb-4">
+                  <Clock className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">24/7 Support</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Round-the-clock access to health information, emergency guidance, and medical support when you need it most.
+                </p>
+              </div>
+
+              <div className="p-6 bg-gradient-to-br from-teal-50 to-cyan-50 rounded-xl hover:shadow-lg transition-all duration-300">
+                <div className="w-12 h-12 bg-teal-600 rounded-lg flex items-center justify-center mb-4">
+                  <CheckCircle className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Medical Records</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  Secure digital storage and management of your medical history, test results, and treatment plans.
+                </p>
+              </div>
+
+              <div className="p-6 bg-gradient-to-br from-pink-50 to-rose-50 rounded-xl hover:shadow-lg transition-all duration-300">
+                <div className="w-12 h-12 bg-pink-600 rounded-lg flex items-center justify-center mb-4">
+                  <Award className="w-6 h-6 text-white" />
+                </div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Certified Platform</h3>
+                <p className="text-gray-600 leading-relaxed">
+                  HIPAA-compliant platform with medical-grade security and privacy standards for your peace of mind.
                 </p>
               </div>
             </div>
           </div>
         </div>
 
-        {/* How It Works */}
-        <div className="py-12 bg-white shadow">
-          <div className="max-w-4xl mx-auto px-4">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">How It Works</h2>
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-              <div className="p-6 border rounded-lg hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Search</h3>
-                <p className="text-gray-600">
-                  Use our search function to find information about specific health topics, symptoms, or medications.
-                </p>
+        {/* Trust & Security */}
+        <div className="py-16">
+          <div className="max-w-4xl mx-auto text-center">
+            <h2 className="text-4xl font-bold text-gray-900 mb-8">Your Health, Your Privacy</h2>
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-12">
+              <div className="p-6">
+                <Shield className="w-12 h-12 text-blue-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">HIPAA Compliant</h3>
+                <p className="text-gray-600">Full compliance with healthcare privacy regulations and data protection standards.</p>
               </div>
-              <div className="p-6 border rounded-lg hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Browse</h3>
-                <p className="text-gray-600">
-                  Explore different categories of health information through our organized navigation menu.
-                </p>
+              <div className="p-6">
+                <CheckCircle className="w-12 h-12 text-green-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Medical Grade Security</h3>
+                <p className="text-gray-600">End-to-end encryption and secure data handling with regular security audits.</p>
               </div>
-              <div className="p-6 border rounded-lg hover:shadow-md transition-shadow">
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Learn</h3>
-                <p className="text-gray-600">
-                  Read articles, watch videos, and access guides to better understand various health topics.
-                </p>
+              <div className="p-6">
+                <Award className="w-12 h-12 text-purple-600 mx-auto mb-4" />
+                <h3 className="text-xl font-semibold text-gray-900 mb-3">Expert Validated</h3>
+                <p className="text-gray-600">All medical content reviewed and validated by licensed healthcare professionals.</p>
               </div>
             </div>
-          </div>
-        </div>
-
-        {/* Privacy & Security */}
-        <div className="py-12">
-          <div className="max-w-4xl mx-auto">
-            <h2 className="text-3xl font-bold text-gray-900 mb-8">Privacy & Security</h2>
-            <div className="grid grid-cols-1 md:grid-cols-2 gap-8">
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Data Protection</h3>
-                <p className="text-gray-600">
-                  Your privacy is important to us. We do not collect or store personal health information.
-                </p>
-              </div>
-              <div>
-                <h3 className="text-xl font-semibold text-gray-900 mb-4">Content Accuracy</h3>
-                <p className="text-gray-600">
-                  All medical information is reviewed by healthcare professionals to ensure accuracy and reliability.
-                </p>
-              </div>
-            </div>
+            <p className="text-lg text-gray-700 leading-relaxed">
+              We never share your personal health information without your explicit consent. Your data is encrypted, secure, and used solely to provide you with the best possible healthcare experience.
+            </p>
           </div>
         </div>
       </div>
