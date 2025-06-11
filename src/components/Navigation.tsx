@@ -10,7 +10,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { 
-  LayoutDashboard, 
   Stethoscope, 
   Activity, 
   User,
@@ -19,7 +18,9 @@ import {
   LogOut,
   LucideProps,
   Menu,
-  Pill
+  Pill,
+  Settings,
+  FileText
 } from "lucide-react";
 import { authService } from "@/services/api";
 import { useState } from "react";
@@ -39,13 +40,8 @@ interface MenuItem {
   href?: string;
 }
 
-// Simplified core navigation items
+// Updated core navigation items without dashboard
 const coreMenuItems: MenuItem[] = [
-  {
-    id: 'dashboard',
-    title: "Dashboard",
-    icon: LayoutDashboard,
-  },
   {
     id: 'profile',
     title: "Profile",
@@ -106,12 +102,21 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
     setMobileMenuOpen(false);
   };
 
+  const handleLogoClick = () => {
+    if (onTabChange) {
+      onTabChange('dashboard');
+    }
+  };
+
   return (
     <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4">
         <div className="flex items-center justify-between h-16">
-          {/* Logo */}
-          <div className="flex items-center space-x-3">
+          {/* Logo - Now clickable and links to dashboard */}
+          <div 
+            className="flex items-center space-x-3 cursor-pointer hover:opacity-80 transition-opacity"
+            onClick={handleLogoClick}
+          >
             <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
               <Heart className="w-6 h-6 text-white" />
             </div>
@@ -181,11 +186,27 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
                   <DropdownMenuContent align="end" className="w-56 bg-white shadow-xl border-gray-200">
                     <DropdownMenuLabel className="text-gray-900">John Doe</DropdownMenuLabel>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem className="hover:bg-gray-50">Profile Settings</DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-50">Medical Records</DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-50">Support</DropdownMenuItem>
+                    <DropdownMenuItem 
+                      onClick={() => handleTabChange('profile')}
+                      className="hover:bg-gray-50 cursor-pointer"
+                    >
+                      <User className="w-4 h-4 mr-2" />
+                      Profile Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer">
+                      <FileText className="w-4 h-4 mr-2" />
+                      Medical Records
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer">
+                      <Settings className="w-4 h-4 mr-2" />
+                      Account Settings
+                    </DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer">
+                      <Heart className="w-4 h-4 mr-2" />
+                      Support
+                    </DropdownMenuItem>
                     <DropdownMenuSeparator />
-                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:bg-red-50">
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:bg-red-50 cursor-pointer">
                       <LogOut className="w-4 h-4 mr-2" />
                       Sign out
                     </DropdownMenuItem>

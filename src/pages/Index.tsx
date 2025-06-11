@@ -1,3 +1,4 @@
+
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
@@ -8,6 +9,7 @@ import MedicationManager from '@/components/MedicationManager';
 import HealthMonitoring from '@/components/HealthMonitoring';
 import HealthEducation from '@/components/HealthEducation';
 import Telemedicine from '@/components/Telemedicine';
+import { useAuth } from '@/contexts/AuthContext';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -24,8 +26,7 @@ import {
 const Index = () => {
   const location = useLocation();
   const [activeTab, setActiveTab] = useState('dashboard');
-  const [isAuthenticated, setIsAuthenticated] = useState(true); // Set to true for testing
-  const [userRole, setUserRole] = useState<'patient' | 'doctor' | 'admin'>('patient');
+  const { isAuthenticated, user } = useAuth();
 
   useEffect(() => {
     if (location.pathname === '/about') {
@@ -40,7 +41,7 @@ const Index = () => {
     
     switch (activeTab) {
       case 'dashboard':
-        return <Dashboard userRole={userRole} />;
+        return <Dashboard userRole={user?.role || 'patient'} />;
       case 'profile':
         return <PatientProfile />;
       case 'symptoms':
@@ -54,7 +55,7 @@ const Index = () => {
       case 'telemedicine':
         return <Telemedicine />;
       default:
-        return <Dashboard userRole={userRole} />;
+        return <Dashboard userRole={user?.role || 'patient'} />;
     }
   };
 
@@ -88,7 +89,7 @@ const Index = () => {
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen bg-gradient-to-br from-blue-50 via-white to-green-50">
-        <Navigation onAuthChange={setIsAuthenticated} />
+        <Navigation onAuthChange={() => {}} />
         
         {/* Hero Section */}
         <div className="container mx-auto px-4 pt-32 pb-20">
@@ -115,7 +116,6 @@ const Index = () => {
               <Button 
                 size="lg"
                 className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white px-8 py-4 text-lg font-semibold shadow-lg hover:shadow-xl transition-all"
-                onClick={() => setIsAuthenticated(true)}
               >
                 Start Your Health Journey
                 <ArrowRight className="ml-2 w-5 h-5" />
@@ -131,7 +131,11 @@ const Index = () => {
 
             {/* Stats */}
             <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w2xl mx-auto">
-              {stats.map((stat, index) => (
+              {[
+                { icon: Users, label: "Active Patients", value: "50K+" },
+                { icon: Award, label: "Success Rate", value: "98%" },
+                { icon: Clock, label: "Response Time", value: "<2min" }
+              ].map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-3">
                     <stat.icon className="w-6 h-6 text-blue-600" />
@@ -145,7 +149,26 @@ const Index = () => {
 
           {/* Features Grid */}
           <div className="grid md:grid-cols-3 gap-8 mb-16">
-            {features.map((feature, index) => (
+            {[
+              {
+                icon: Stethoscope,
+                title: "AI-Powered Diagnostics",
+                description: "Advanced symptom analysis with machine learning algorithms for accurate health insights and personalized recommendations.",
+                gradient: "from-blue-500 to-cyan-500"
+              },
+              {
+                icon: Shield,
+                title: "Secure Health Records",
+                description: "Military-grade encryption ensures your medical data is protected with HIPAA-compliant storage and access controls.",
+                gradient: "from-green-500 to-emerald-500"
+              },
+              {
+                icon: Activity,
+                title: "Real-time Monitoring",
+                description: "Continuous health tracking with smart alerts and comprehensive analytics to keep you informed about your wellness journey.",
+                gradient: "from-purple-500 to-pink-500"
+              }
+            ].map((feature, index) => (
               <Card key={index} className="border-0 shadow-xl hover:shadow-2xl transition-all duration-300 hover:-translate-y-2 bg-white/80 backdrop-blur-sm">
                 <CardContent className="p-8 text-center">
                   <div className={`w-20 h-20 bg-gradient-to-r ${feature.gradient} rounded-2xl flex items-center justify-center mx-auto mb-6 shadow-lg`}>
@@ -166,7 +189,6 @@ const Index = () => {
               size="lg"
               variant="secondary"
               className="bg-white text-blue-600 hover:bg-gray-100 px-8 py-4 text-lg font-semibold shadow-lg"
-              onClick={() => setIsAuthenticated(true)}
             >
               Get Started Today
             </Button>
@@ -179,7 +201,7 @@ const Index = () => {
   return (
     <div className="min-h-screen bg-gray-50">
       <Navigation 
-        onAuthChange={setIsAuthenticated} 
+        onAuthChange={() => {}}
         isAuthenticated={isAuthenticated}
         activeTab={activeTab}
         onTabChange={setActiveTab}
