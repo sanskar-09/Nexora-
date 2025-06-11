@@ -1,8 +1,10 @@
-
 import { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Dashboard from '@/components/Dashboard';
+import PatientProfile from '@/components/PatientProfile';
+import AppointmentScheduler from '@/components/AppointmentScheduler';
+import MedicalRecords from '@/components/MedicalRecords';
 import SymptomChecker from '@/components/SymptomChecker';
 import MedicationManager from '@/components/MedicationManager';
 import HealthMonitoring from '@/components/HealthMonitoring';
@@ -41,6 +43,12 @@ const Index = () => {
     switch (activeTab) {
       case 'dashboard':
         return <Dashboard userRole={userRole} />;
+      case 'profile':
+        return <PatientProfile />;
+      case 'appointments':
+        return <AppointmentScheduler />;
+      case 'records':
+        return <MedicalRecords />;
       case 'symptoms':
         return <SymptomChecker />;
       case 'medications':

@@ -8,7 +8,13 @@ import { Calendar } from "@/components/ui/calendar";
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Dialog, DialogContent, DialogDescription, DialogHeader, DialogTitle, DialogTrigger } from "@/components/ui/dialog";
 import { Tabs, TabsContent, TabsList, TabsTrigger } from "@/components/ui/tabs";
+import { Textarea } from "@/components/ui/textarea";
+import { useToast } from "@/components/ui/use-toast";
 import { format, addDays, isSameDay, parseISO } from 'date-fns';
+import { useLoadingState } from '@/hooks/useLoadingState';
+import { validateForm, commonValidationSchemas } from '@/utils/formValidation';
+import LoadingSpinner from '@/components/LoadingSpinner';
+import ErrorMessage from '@/components/ErrorMessage';
 
 interface Appointment {
   id: number;
@@ -20,14 +26,21 @@ interface Appointment {
   notes?: string;
   location: string;
   type: 'in-person' | 'video' | 'phone';
+  reason?: string;
 }
 
 const AppointmentScheduler = () => {
+  const { toast } = useToast();
+  const { isLoading, error, executeAsync, setError } = useLoadingState();
+  
   const [date, setDate] = useState<Date | undefined>(new Date());
   const [selectedTime, setSelectedTime] = useState<string>('');
   const [selectedDoctor, setSelectedDoctor] = useState<string>('');
   const [selectedType, setSelectedType] = useState<'in-person' | 'video' | 'phone'>('in-person');
   const [appointmentNotes, setAppointmentNotes] = useState<string>('');
+  const [appointmentReason, setAppointmentReason] = useState<string>('');
+  const [formErrors, setFormErrors] = useState<Record<string, string>>({});
+
   const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: 1,
@@ -78,38 +91,92 @@ const AppointmentScheduler = () => {
     "4:00 PM", "4:30 PM"
   ];
 
-  const bookAppointment = () => {
-    if (!date || !selectedTime || !selectedDoctor) return;
-
-    const doctor = availableDoctors.find(doc => doc.name === selectedDoctor);
-    if (!doctor) return;
-
-    const newAppointment: Appointment = {
-      id: appointments.length + 1,
+  const validateAppointmentForm = () => {
+    const formData = {
       doctorName: selectedDoctor,
-      specialty: doctor.specialty,
-      date: date,
+      date: date?.toISOString(),
       time: selectedTime,
-      status: 'scheduled',
-      notes: appointmentNotes,
-      location: selectedType === 'in-person' ? "Main Hospital, Room 305" : "Virtual Appointment",
-      type: selectedType
+      reason: appointmentReason
     };
 
-    setAppointments([...appointments, newAppointment]);
-    setSelectedTime('');
-    setAppointmentNotes('');
+    const errors = validateForm(formData, {
+      doctorName: { required: true },
+      date: { required: true },
+      time: { required: true },
+      reason: { required: true, minLength: 10, maxLength: 500 }
+    });
+
+    setFormErrors(errors);
+    return Object.keys(errors).length === 0;
   };
 
-  const cancelAppointment = (id: number) => {
-    setAppointments(appointments.map(app => 
-      app.id === id ? { ...app, status: 'cancelled' } : app
-    ));
+  const bookAppointment = async () => {
+    if (!validateAppointmentForm()) {
+      return;
+    }
+
+    const result = await executeAsync(async () => {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1500));
+
+      const doctor = availableDoctors.find(doc => doc.name === selectedDoctor);
+      if (!doctor) throw new Error('Doctor not found');
+
+      const newAppointment: Appointment = {
+        id: appointments.length + 1,
+        doctorName: selectedDoctor,
+        specialty: doctor.specialty,
+        date: date!,
+        time: selectedTime,
+        status: 'scheduled',
+        notes: appointmentNotes,
+        reason: appointmentReason,
+        location: selectedType === 'in-person' ? "Main Hospital, Room 305" : "Virtual Appointment",
+        type: selectedType
+      };
+
+      setAppointments(prev => [newAppointment, ...prev]);
+      
+      // Reset form
+      setSelectedTime('');
+      setAppointmentNotes('');
+      setAppointmentReason('');
+      setFormErrors({});
+
+      return newAppointment;
+    });
+
+    if (result) {
+      toast({
+        title: "Appointment booked successfully",
+        description: `Your appointment with ${selectedDoctor} has been scheduled.`,
+      });
+    }
+  };
+
+  const cancelAppointment = async (id: number) => {
+    const result = await executeAsync(async () => {
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      setAppointments(prev => prev.map(app => 
+        app.id === id ? { ...app, status: 'cancelled' } : app
+      ));
+    });
+
+    if (result !== null) {
+      toast({
+        title: "Appointment cancelled",
+        description: "Your appointment has been cancelled successfully.",
+      });
+    }
   };
 
   const rescheduleAppointment = (id: number) => {
     // Implementation for rescheduling would go here
-    console.log("Reschedule appointment", id);
+    toast({
+      title: "Reschedule",
+      description: "Rescheduling feature will be available soon.",
+    });
   };
 
   const getAppointmentsForDate = (date: Date) => {
@@ -125,6 +192,15 @@ const AppointmentScheduler = () => {
         </div>
       </div>
 
+      {error && (
+        <ErrorMessage 
+          title="Appointment Error"
+          message={error} 
+          variant="card"
+          onDismiss={() => setError(null)}
+        />
+      )}
+
       <Tabs defaultValue="upcoming" className="w-full">
         <TabsList className="grid w-full grid-cols-3">
           <TabsTrigger value="upcoming">Upcoming Appointments</TabsTrigger>
@@ -133,66 +209,81 @@ const AppointmentScheduler = () => {
         </TabsList>
 
         <TabsContent value="upcoming" className="space-y-4">
-          <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-            {appointments
-              .filter(app => app.status === 'scheduled')
-              .sort((a, b) => a.date.getTime() - b.date.getTime())
-              .map(appointment => (
-                <Card key={appointment.id} className="overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div>
-                        <CardTitle>{appointment.doctorName}</CardTitle>
-                        <CardDescription>{appointment.specialty}</CardDescription>
-                      </div>
-                      <Badge className={appointment.type === 'video' ? 'bg-blue-100 text-blue-800' : 
-                                        appointment.type === 'phone' ? 'bg-purple-100 text-purple-800' : 
-                                        'bg-green-100 text-green-800'}>
-                        {appointment.type === 'video' ? 'Video Call' : 
-                         appointment.type === 'phone' ? 'Phone Call' : 'In-Person'}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="space-y-2">
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Date & Time:</span>
-                        <span className="text-sm">
-                          {format(appointment.date, 'MMMM d, yyyy')} at {appointment.time}
-                        </span>
-                      </div>
-                      <div className="flex justify-between">
-                        <span className="text-sm font-medium">Location:</span>
-                        <span className="text-sm">{appointment.location}</span>
-                      </div>
-                      {appointment.notes && (
-                        <div className="pt-2">
-                          <span className="text-sm font-medium">Notes:</span>
-                          <p className="text-sm text-gray-600 mt-1">{appointment.notes}</p>
+          {isLoading ? (
+            <div className="flex justify-center py-8">
+              <LoadingSpinner size="lg" />
+            </div>
+          ) : (
+            <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
+              {appointments
+                .filter(app => app.status === 'scheduled')
+                .sort((a, b) => a.date.getTime() - b.date.getTime())
+                .map(appointment => (
+                  <Card key={appointment.id} className="overflow-hidden">
+                    <CardHeader className="pb-2">
+                      <div className="flex justify-between items-start">
+                        <div>
+                          <CardTitle>{appointment.doctorName}</CardTitle>
+                          <CardDescription>{appointment.specialty}</CardDescription>
                         </div>
-                      )}
-                      <div className="flex justify-end space-x-2 pt-2">
-                        <Button 
-                          variant="outline" 
-                          size="sm"
-                          onClick={() => rescheduleAppointment(appointment.id)}
-                        >
-                          Reschedule
-                        </Button>
-                        <Button 
-                          variant="destructive" 
-                          size="sm"
-                          onClick={() => cancelAppointment(appointment.id)}
-                        >
-                          Cancel
-                        </Button>
+                        <Badge className={appointment.type === 'video' ? 'bg-blue-100 text-blue-800' : 
+                                          appointment.type === 'phone' ? 'bg-purple-100 text-purple-800' : 
+                                          'bg-green-100 text-green-800'}>
+                          {appointment.type === 'video' ? 'Video Call' : 
+                           appointment.type === 'phone' ? 'Phone Call' : 'In-Person'}
+                        </Badge>
                       </div>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
-          </div>
-          {appointments.filter(app => app.status === 'scheduled').length === 0 && (
+                    </CardHeader>
+                    <CardContent>
+                      <div className="space-y-2">
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium">Date & Time:</span>
+                          <span className="text-sm">
+                            {format(appointment.date, 'MMMM d, yyyy')} at {appointment.time}
+                          </span>
+                        </div>
+                        <div className="flex justify-between">
+                          <span className="text-sm font-medium">Location:</span>
+                          <span className="text-sm">{appointment.location}</span>
+                        </div>
+                        {appointment.reason && (
+                          <div className="pt-2">
+                            <span className="text-sm font-medium">Reason:</span>
+                            <p className="text-sm text-gray-600 mt-1">{appointment.reason}</p>
+                          </div>
+                        )}
+                        {appointment.notes && (
+                          <div className="pt-2">
+                            <span className="text-sm font-medium">Notes:</span>
+                            <p className="text-sm text-gray-600 mt-1">{appointment.notes}</p>
+                          </div>
+                        )}
+                        <div className="flex justify-end space-x-2 pt-2">
+                          <Button 
+                            variant="outline" 
+                            size="sm"
+                            onClick={() => rescheduleAppointment(appointment.id)}
+                            disabled={isLoading}
+                          >
+                            Reschedule
+                          </Button>
+                          <Button 
+                            variant="destructive" 
+                            size="sm"
+                            onClick={() => cancelAppointment(appointment.id)}
+                            disabled={isLoading}
+                          >
+                            {isLoading ? <LoadingSpinner size="sm" /> : 'Cancel'}
+                          </Button>
+                        </div>
+                      </div>
+                    </CardContent>
+                  </Card>
+                ))}
+            </div>
+          )}
+          
+          {appointments.filter(app => app.status === 'scheduled').length === 0 && !isLoading && (
             <Card>
               <CardContent className="pt-6 text-center">
                 <p className="text-gray-500">You have no upcoming appointments.</p>
@@ -215,7 +306,7 @@ const AppointmentScheduler = () => {
                 <div className="space-y-1">
                   <Label htmlFor="doctor">Doctor</Label>
                   <Select value={selectedDoctor} onValueChange={setSelectedDoctor}>
-                    <SelectTrigger id="doctor">
+                    <SelectTrigger id="doctor" className={formErrors.doctorName ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select a doctor" />
                     </SelectTrigger>
                     <SelectContent>
@@ -226,6 +317,9 @@ const AppointmentScheduler = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.doctorName && (
+                    <ErrorMessage message={formErrors.doctorName} />
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -234,11 +328,14 @@ const AppointmentScheduler = () => {
                     mode="single"
                     selected={date}
                     onSelect={setDate}
-                    className="rounded-md border"
+                    className={`rounded-md border ${formErrors.date ? 'border-red-500' : ''}`}
                     disabled={{
                       before: new Date(),
                     }}
                   />
+                  {formErrors.date && (
+                    <ErrorMessage message={formErrors.date} />
+                  )}
                 </div>
               </CardContent>
             </Card>
@@ -252,7 +349,7 @@ const AppointmentScheduler = () => {
                 <div className="space-y-1">
                   <Label htmlFor="time">Time Slot</Label>
                   <Select value={selectedTime} onValueChange={setSelectedTime}>
-                    <SelectTrigger id="time">
+                    <SelectTrigger id="time" className={formErrors.time ? 'border-red-500' : ''}>
                       <SelectValue placeholder="Select a time" />
                     </SelectTrigger>
                     <SelectContent>
@@ -263,6 +360,9 @@ const AppointmentScheduler = () => {
                       ))}
                     </SelectContent>
                   </Select>
+                  {formErrors.time && (
+                    <ErrorMessage message={formErrors.time} />
+                  )}
                 </div>
 
                 <div className="space-y-1">
@@ -280,10 +380,24 @@ const AppointmentScheduler = () => {
                 </div>
 
                 <div className="space-y-1">
-                  <Label htmlFor="notes">Notes (Optional)</Label>
-                  <Input
+                  <Label htmlFor="reason">Reason for Visit</Label>
+                  <Textarea
+                    id="reason"
+                    placeholder="Please describe the reason for your appointment"
+                    value={appointmentReason}
+                    onChange={(e) => setAppointmentReason(e.target.value)}
+                    className={formErrors.reason ? 'border-red-500' : ''}
+                  />
+                  {formErrors.reason && (
+                    <ErrorMessage message={formErrors.reason} />
+                  )}
+                </div>
+
+                <div className="space-y-1">
+                  <Label htmlFor="notes">Additional Notes (Optional)</Label>
+                  <Textarea
                     id="notes"
-                    placeholder="Add any notes or concerns for your doctor"
+                    placeholder="Any additional information for your doctor"
                     value={appointmentNotes}
                     onChange={(e) => setAppointmentNotes(e.target.value)}
                   />
@@ -292,9 +406,16 @@ const AppointmentScheduler = () => {
                 <Button 
                   className="w-full mt-4" 
                   onClick={bookAppointment}
-                  disabled={!date || !selectedTime || !selectedDoctor}
+                  disabled={!date || !selectedTime || !selectedDoctor || isLoading}
                 >
-                  Book Appointment
+                  {isLoading ? (
+                    <>
+                      <LoadingSpinner size="sm" className="mr-2" />
+                      Booking...
+                    </>
+                  ) : (
+                    'Book Appointment'
+                  )}
                 </Button>
               </CardContent>
             </Card>
