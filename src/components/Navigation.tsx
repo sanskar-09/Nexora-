@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -18,8 +19,7 @@ import {
   LogOut,
   LucideProps,
   Menu,
-  Calendar,
-  FileText
+  Pill
 } from "lucide-react";
 import { authService } from "@/services/api";
 import { useState } from "react";
@@ -39,7 +39,7 @@ interface MenuItem {
   href?: string;
 }
 
-// Enhanced navigation items with new pages
+// Simplified core navigation items
 const coreMenuItems: MenuItem[] = [
   {
     id: 'dashboard',
@@ -52,19 +52,14 @@ const coreMenuItems: MenuItem[] = [
     icon: User,
   },
   {
-    id: 'appointments',
-    title: "Appointments",
-    icon: Calendar,
-  },
-  {
-    id: 'records',
-    title: "Medical Records",
-    icon: FileText,
-  },
-  {
     id: 'symptoms',
     title: "Symptoms",
     icon: Stethoscope,
+  },
+  {
+    id: 'medications',
+    title: "Medications",
+    icon: Pill,
   },
   {
     id: 'monitoring',

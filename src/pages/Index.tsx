@@ -3,13 +3,11 @@ import { useLocation } from 'react-router-dom';
 import Navigation from '@/components/Navigation';
 import Dashboard from '@/components/Dashboard';
 import PatientProfile from '@/components/PatientProfile';
-import AppointmentScheduler from '@/components/AppointmentScheduler';
-import MedicalRecords from '@/components/MedicalRecords';
 import SymptomChecker from '@/components/SymptomChecker';
 import MedicationManager from '@/components/MedicationManager';
 import HealthMonitoring from '@/components/HealthMonitoring';
-import Telemedicine from '@/components/Telemedicine';
 import HealthEducation from '@/components/HealthEducation';
+import Telemedicine from '@/components/Telemedicine';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { 
@@ -45,10 +43,6 @@ const Index = () => {
         return <Dashboard userRole={userRole} />;
       case 'profile':
         return <PatientProfile />;
-      case 'appointments':
-        return <AppointmentScheduler />;
-      case 'records':
-        return <MedicalRecords />;
       case 'symptoms':
         return <SymptomChecker />;
       case 'medications':
@@ -136,7 +130,7 @@ const Index = () => {
             </div>
 
             {/* Stats */}
-            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w-2xl mx-auto">
+            <div className="grid grid-cols-1 md:grid-cols-3 gap-8 max-w2xl mx-auto">
               {stats.map((stat, index) => (
                 <div key={index} className="text-center">
                   <div className="inline-flex items-center justify-center w-12 h-12 bg-blue-100 rounded-lg mb-3">
