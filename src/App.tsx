@@ -6,7 +6,10 @@ import { BrowserRouter, Routes, Route } from "react-router-dom";
 import Index from "./pages/Index";
 import NotFound from "./pages/NotFound";
 import About from "./pages/About";
+<<<<<<< HEAD
 
+=======
+>>>>>>> parent of 991567e (feat: add login page and integrate it with the login API)
 
 const queryClient = new QueryClient();
 
@@ -18,8 +21,11 @@ const App = () => (
       <BrowserRouter>
         <Routes>
           <Route path="/" element={<Index />} />
+<<<<<<< HEAD
 
 <<<<<<< HEAD
+=======
+>>>>>>> parent of 991567e (feat: add login page and integrate it with the login API)
           <Route path="/about" element={<About />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
