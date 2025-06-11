@@ -1,10 +1,44 @@
 
 import React from 'react';
-import { Heart, Shield, Users, Award, Clock, CheckCircle } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
+import { Heart, Shield, Users, Award, Clock, CheckCircle, ArrowLeft, Home } from 'lucide-react';
+import { Button } from '@/components/ui/button';
 
 const About = () => {
+  const navigate = useNavigate();
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-blue-50 to-white">
+      {/* Navigation Header */}
+      <div className="sticky top-0 z-50 bg-white/80 backdrop-blur-md border-b border-gray-200">
+        <div className="container mx-auto px-4 py-4">
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-4">
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate(-1)}
+                className="flex items-center space-x-2"
+              >
+                <ArrowLeft className="w-4 h-4" />
+                <span>Back</span>
+              </Button>
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/')}
+                className="flex items-center space-x-2"
+              >
+                <Home className="w-4 h-4" />
+                <span>Home</span>
+              </Button>
+            </div>
+            <h1 className="text-xl font-bold text-gray-900">About </h1>
+            <div className="w-32"></div> {/* Spacer for centering */}
+          </div>
+        </div>
+      </div>
+
       <div className="container mx-auto px-4 py-12">
         {/* Hero Section */}
         <div className="relative py-16 mb-16">
@@ -104,6 +138,35 @@ const About = () => {
           </div>
         </div>
 
+        {/* How It Works */}
+        <div className="py-16 bg-gradient-to-r from-gray-50 to-blue-50 rounded-3xl mb-16">
+          <div className="max-w-6xl mx-auto px-8">
+            <h2 className="text-4xl font-bold text-gray-900 mb-12 text-center">How It Works</h2>
+            <div className="grid grid-cols-1 md:grid-cols-4 gap-8">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-blue-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">1</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Sign Up</h3>
+                <p className="text-gray-600">Create your secure health profile with basic information and preferences.</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">2</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Input Symptoms</h3>
+                <p className="text-gray-600">Describe your symptoms using our intuitive interface and AI-guided questions.</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-purple-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">3</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Get Analysis</h3>
+                <p className="text-gray-600">Receive AI-powered health insights and recommendations for next steps.</p>
+              </div>
+              <div className="text-center">
+                <div className="w-16 h-16 bg-orange-600 rounded-full flex items-center justify-center mx-auto mb-6 text-white text-2xl font-bold">4</div>
+                <h3 className="text-xl font-semibold text-gray-900 mb-4">Take Action</h3>
+                <p className="text-gray-600">Connect with healthcare providers or monitor your health based on recommendations.</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
         {/* Trust & Security */}
         <div className="py-16">
           <div className="max-w-4xl mx-auto text-center">
@@ -129,6 +192,16 @@ const About = () => {
               We never share your personal health information without your explicit consent. Your data is encrypted, secure, and used solely to provide you with the best possible healthcare experience.
             </p>
           </div>
+        </div>
+
+        {/* Bottom Navigation */}
+        <div className="text-center pt-12 border-t border-gray-200">
+          <Button
+            onClick={() => navigate('/')}
+            className="bg-blue-600 hover:bg-blue-700 text-white px-8 py-3 text-lg"
+          >
+            Return to Dashboard
+          </Button>
         </div>
       </div>
     </div>
