@@ -1,111 +1,240 @@
+
 import { Button } from "@/components/ui/button";
-import { Link, useLocation } from "react-router-dom";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  LayoutDashboard, 
+  Stethoscope, 
+  Activity, 
+  User,
+  Heart,
+  Video,
+  LogOut,
+  LucideProps,
+  Menu
+} from "lucide-react";
+import { authService } from "@/services/api";
 import { useState } from "react";
-import { Menu, X, LogIn, UserPlus } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
 
 interface NavigationProps {
-  onAuthChange?: (isAuthenticated: boolean) => void;
+  onAuthChange: (isAuth: boolean) => void;
   isAuthenticated?: boolean;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
 }
 
-const Navigation = ({ onAuthChange, isAuthenticated = true, activeTab, onTabChange }: NavigationProps) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const location = useLocation();
+interface MenuItem {
+  id: string;
+  title: string;
+  icon: React.ForwardRefExoticComponent<React.PropsWithoutRef<LucideProps> & React.RefAttributes<SVGSVGElement>>;
+  href?: string;
+}
 
-  const navigationItems = [
-    { path: "/", label: "Dashboard", tab: "dashboard" },
-    { path: "/symptom-checker", label: "Symptom Checker", tab: "symptom-checker" },
-    { path: "/medication-manager", label: "Medication Manager", tab: "medication-manager" },
-    { path: "/health-monitoring", label: "Health Monitoring", tab: "health-monitoring" },
-    { path: "/telemedicine", label: "Telemedicine", tab: "telemedicine" },
-    { path: "/health-education", label: "Health Education", tab: "health-education" }
-  ];
+// Simplified core navigation items
+const coreMenuItems: MenuItem[] = [
+  {
+    id: 'dashboard',
+    title: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    id: 'symptoms',
+    title: "Symptoms",
+    icon: Stethoscope,
+  },
+  {
+    id: 'monitoring',
+    title: "Monitoring",
+    icon: Activity,
+  },
+  {
+    id: 'telemedicine',
+    title: "Telemedicine",
+    icon: Video,
+  },
+];
 
-  const handleNavClick = (item: any) => {
-    if (onTabChange && item.tab) {
-      onTabChange(item.tab);
+const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabChange }: NavigationProps) => {
+  const [user, setUser] = useState(null);
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    try {
+      const email = prompt("Enter your email");
+      const password = prompt("Enter your password");
+      if (email && password) {
+        const userData = await authService.login(email, password);
+        setUser(userData);
+        onAuthChange(true);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed. Please check your credentials.");
     }
   };
 
+  const handleLogout = () => {
+    authService.logout();
+    setUser(null);
+    onAuthChange(false);
+  };
+
+  const handleTabChange = (tab: string) => {
+    if (onTabChange) {
+      onTabChange(tab);
+    }
+    setMobileMenuOpen(false);
+  };
+
   return (
-    <nav className="fixed top-0 w-full bg-white shadow-lg z-50">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white/95 backdrop-blur-md border-b border-gray-200 shadow-sm">
       <div className="container mx-auto px-4">
-        <div className="flex justify-between items-center h-16">
-          <div className="flex items-center">
-            <Link to="/" className="flex items-center">
-              <span className="text-xl font-bold text-gray-800">Nexora</span>
-            </Link>
+        <div className="flex items-center justify-between h-16">
+          {/* Logo */}
+          <div className="flex items-center space-x-3">
+            <div className="w-10 h-10 bg-gradient-to-br from-blue-600 to-blue-700 rounded-xl flex items-center justify-center shadow-lg">
+              <Heart className="w-6 h-6 text-white" />
+            </div>
+            <div>
+              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-blue-800 bg-clip-text text-transparent">
+                Nexora
+              </span>
+              <p className="text-xs text-gray-500 -mt-1">Healthcare Platform</p>
+            </div>
           </div>
-          <div className="hidden md:flex items-center space-x-4">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`px-3 py-2 rounded-md text-sm font-medium ${
-                  location.pathname === item.path
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
-                onClick={() => handleNavClick(item)}
+
+          {/* Desktop Navigation - Only show when authenticated */}
+          {isAuthenticated && onTabChange && (
+            <div className="hidden md:flex items-center space-x-2">
+              {coreMenuItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={activeTab === item.id ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => handleTabChange(item.id)}
+                  className={`flex items-center space-x-2 ${
+                    activeTab === item.id 
+                      ? "bg-blue-600 text-white shadow-md" 
+                      : "hover:bg-blue-50 text-gray-700"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span className="font-medium">{item.title}</span>
+                </Button>
+              ))}
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => navigate('/about')}
+                className="text-gray-700 hover:bg-blue-50"
               >
-                {item.label}
-              </Link>
-            ))}
-          </div>
-          <div className="flex items-center space-x-4">
-            {!isAuthenticated ? (
+                About
+              </Button>
+            </div>
+          )}
+
+          {/* Mobile Menu Button */}
+          {isAuthenticated && (
+            <Button
+              variant="ghost"
+              size="sm"
+              className="md:hidden"
+              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
+            >
+              <Menu className="w-5 h-5" />
+            </Button>
+          )}
+
+          {/* User Actions */}
+          <div className="flex items-center space-x-3">
+            {isAuthenticated ? (
               <>
-                <Link to="/login" className="text-gray-600 hover:text-gray-900">
-                  Login
-                </Link>
-                <Link to="/signup" className="bg-blue-500 text-white px-4 py-2 rounded-md hover:bg-blue-600">
-                  Sign Up
-                </Link>
+                <Badge variant="secondary" className="bg-green-50 text-green-700 border-green-200 hidden sm:flex">
+                  Patient Portal
+                </Badge>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="w-9 h-9 rounded-full bg-gradient-to-br from-blue-600 to-blue-700 text-white hover:shadow-lg transition-all">
+                      <User className="w-4 h-4" />
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-white shadow-xl border-gray-200">
+                    <DropdownMenuLabel className="text-gray-900">John Doe</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem className="hover:bg-gray-50">Profile Settings</DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-50">Medical Records</DropdownMenuItem>
+                    <DropdownMenuItem className="hover:bg-gray-50">Support</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout} className="text-red-600 hover:bg-red-50">
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
               </>
             ) : (
-              <button
-                onClick={() => onAuthChange?.(false)}
-                className="text-gray-600 hover:text-gray-900"
-              >
-                Logout
-              </button>
+              <div className="flex items-center space-x-3">
+                <Button variant="ghost" onClick={handleLogin} className="text-gray-700 hover:bg-blue-50">
+                  Sign In
+                </Button>
+                <Button 
+                  className="bg-gradient-to-r from-blue-600 to-blue-700 hover:from-blue-700 hover:to-blue-800 text-white shadow-md"
+                  onClick={() => authService.register({
+                    name: prompt("Enter your name"),
+                    email: prompt("Enter your email"),
+                    password: prompt("Enter your password"),
+                    role: 'patient'
+                  }).then(() => handleLogin())}
+                >
+                  Get Started
+                </Button>
+              </div>
             )}
           </div>
-          <div className="md:hidden">
-            <button
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-gray-600 hover:text-gray-900"
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </button>
-          </div>
         </div>
-      </div>
-      {isMobileMenuOpen && (
-        <div className="md:hidden">
-          <div className="px-2 pt-2 pb-3 space-y-1">
-            {navigationItems.map((item) => (
-              <Link
-                key={item.path}
-                to={item.path}
-                className={`block px-3 py-2 rounded-md text-base font-medium ${
-                  location.pathname === item.path
-                    ? 'bg-gray-100 text-gray-900'
-                    : 'text-gray-600 hover:bg-gray-50'
-                }`}
+
+        {/* Mobile Menu */}
+        {isAuthenticated && mobileMenuOpen && (
+          <div className="md:hidden py-4 border-t border-gray-200 bg-white">
+            <div className="flex flex-col space-y-2">
+              {coreMenuItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={activeTab === item.id ? "default" : "ghost"}
+                  onClick={() => handleTabChange(item.id)}
+                  className={`justify-start ${
+                    activeTab === item.id 
+                      ? "bg-blue-600 text-white" 
+                      : "hover:bg-blue-50 text-gray-700"
+                  }`}
+                >
+                  <item.icon className="w-4 h-4 mr-3" />
+                  {item.title}
+                </Button>
+              ))}
+              <Button
+                variant="ghost"
                 onClick={() => {
-                  handleNavClick(item);
-                  setIsMobileMenuOpen(false);
+                  navigate('/about');
+                  setMobileMenuOpen(false);
                 }}
+                className="justify-start text-gray-700 hover:bg-blue-50"
               >
-                {item.label}
-              </Link>
-            ))}
+                About
+              </Button>
+            </div>
           </div>
-        </div>
-      )}
+        )}
+      </div>
     </nav>
   );
 };

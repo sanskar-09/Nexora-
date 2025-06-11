@@ -33,7 +33,7 @@ const About = () => {
                 <span>Home</span>
               </Button>
             </div>
-            <h1 className="text-xl font-bold text-gray-900">About </h1>
+            <h1 className="text-xl font-bold text-gray-900">About HealthCare Plus</h1>
             <div className="w-32"></div> {/* Spacer for centering */}
           </div>
         </div>
@@ -45,7 +45,7 @@ const About = () => {
           <div className="absolute inset-0 bg-gradient-to-r from-blue-600 to-cyan-600 shadow-2xl transform -skew-y-1 rounded-3xl"></div>
           <div className="relative max-w-4xl mx-auto px-8 text-center">
             <Heart className="w-16 h-16 text-white mx-auto mb-6" />
-            <h1 className="text-5xl font-bold text-white mb-6">About Nexora</h1>
+            <h1 className="text-5xl font-bold text-white mb-6">About HealthCare Plus</h1>
             <p className="text-xl text-blue-100 mb-8 leading-relaxed">
               Your comprehensive digital health companion, empowering you to take control of your wellness journey through cutting-edge technology and personalized care.
             </p>
