@@ -105,7 +105,7 @@ const Telemedicine = () => {
   }, []);
 
   const [isInsuranceModalOpen, setIsInsuranceModalOpen] = useState(false);
-  const [activeTab, setActiveTab] = useState('dashboard');
+  const [activeTab, setActiveTab] = useState('find');
   const [selectedDoctor, setSelectedDoctor] = useState<Doctor | null>(null);
   const [consultationDate, setConsultationDate] = useState<Date | undefined>(new Date());
   const [consultationTime, setConsultationTime] = useState<string>('');
@@ -288,21 +288,21 @@ const Telemedicine = () => {
       title: 'Book Appointment',
       description: 'Schedule a new consultation',
       icon: CalendarIcon,
-      action: () => setActiveTab('find-doctor')
+      action: () => setActiveTab('find')
     },
     {
       id: 2,
       title: 'Upload Records',
       description: 'Share your medical history',
       icon: Upload,
-      action: () => setActiveTab('upload-records')
+      action: () => setIsRecordUploadModalOpen(true)
     },
     {
       id: 3,
       title: 'View Prescriptions',
       description: 'Check your medications',
       icon: FileText,
-      action: () => setActiveTab('prescriptions')
+      action: () => setActiveTab('appointments')
     },
     {
       id: 4,
@@ -761,544 +761,297 @@ const Telemedicine = () => {
     });
   };
 
-  const renderTabContent = () => {
-    switch (activeTab) {
-      case 'find-doctor':
-        return (
-          <div className="space-y-6">
-            <div className="flex justify-between items-center">
-              <h2 className="text-2xl font-bold">Find a Doctor</h2>
-              <Button onClick={() => setIsBookingModalOpen(true)} disabled={!selectedDoctor}>
-                Book Appointment
-              </Button>
-            </div>
-            
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-              {doctors.map((doctor) => (
-                <Card key={doctor.id} className="cursor-pointer hover:shadow-lg transition-shadow" 
-                      onClick={() => setSelectedDoctor(doctor)}>
-                  <CardHeader>
-                    <div className="flex items-center gap-4">
-                      <Avatar>
-                        <AvatarImage src={doctor.imageUrl} />
-                        <AvatarFallback>{doctor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                      </Avatar>
-                      <div>
-                        <CardTitle className="text-lg">{doctor.name}</CardTitle>
-                        <p className="text-muted-foreground">{doctor.specialty}</p>
-                      </div>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{doctor.rating}</span>
-                      <span className="text-muted-foreground">({doctor.experience} years exp.)</span>
-                    </div>
-                    <p className="text-sm text-muted-foreground line-clamp-2">{doctor.bio}</p>
-                  </CardContent>
-                  <CardFooter>
-                    <Badge variant="secondary">{doctor.availability.join(', ')}</Badge>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
+  try {
+    return (
+      <div className="container mx-auto p-6">
+        <div className="flex justify-between items-center mb-6">
+          <div>
+            <h1 className="text-3xl font-bold">Welcome Back</h1>
+            <p className="text-muted-foreground">Here's your health overview</p>
           </div>
-        );
-
-      case 'upload-records':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">Upload Medical Records</h2>
-            <Card>
-              <CardHeader>
-                <CardTitle>Share Your Medical History</CardTitle>
-                <CardDescription>
-                  Upload your medical records to help doctors provide better care
-                </CardDescription>
-              </CardHeader>
-              <CardContent className="space-y-4">
-                <div className="border-2 border-dashed rounded-lg p-8 text-center">
-                  <Upload className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                  <h3 className="font-medium mb-2">Drop files here or click to browse</h3>
-                  <p className="text-sm text-muted-foreground mb-4">
-                    Supported formats: PDF, JPG, PNG, DOC (Max 10MB)
-                  </p>
-                  <Input type="file" multiple accept=".pdf,.jpg,.jpeg,.png,.doc,.docx" className="hidden" />
-                  <Button>Choose Files</Button>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Record Type</Label>
-                  <Select>
-                    <SelectTrigger>
-                      <SelectValue placeholder="Select record type" />
-                    </SelectTrigger>
-                    <SelectContent>
-                      <SelectItem value="lab-results">Lab Results</SelectItem>
-                      <SelectItem value="imaging">Imaging/X-rays</SelectItem>
-                      <SelectItem value="prescription">Prescription History</SelectItem>
-                      <SelectItem value="vaccination">Vaccination Records</SelectItem>
-                      <SelectItem value="other">Other</SelectItem>
-                    </SelectContent>
-                  </Select>
-                </div>
-                
-                <div className="space-y-2">
-                  <Label>Notes (Optional)</Label>
-                  <Textarea placeholder="Add any additional notes about these records..." />
-                </div>
-              </CardContent>
-              <CardFooter>
-                <Button className="w-full">Upload Records</Button>
-              </CardFooter>
-            </Card>
-          </div>
-        );
-
-      case 'prescriptions':
-        return (
-          <div className="space-y-6">
-            <h2 className="text-2xl font-bold">My Prescriptions</h2>
-            
-            <div className="grid gap-4">
-              {appointments
-                .filter(apt => apt.prescription)
-                .map((appointment) => (
-                  <Card key={appointment.id}>
-                    <CardHeader>
-                      <div className="flex justify-between items-start">
-                        <div>
-                          <CardTitle className="text-lg">Prescription from {appointment.doctorName}</CardTitle>
-                          <CardDescription>
-                            {format(appointment.date, 'MMM dd, yyyy')} • {appointment.specialty}
-                          </CardDescription>
-                        </div>
-                        <Button variant="outline" size="sm">
-                          <Download className="h-4 w-4 mr-2" />
-                          Download
-                        </Button>
-                      </div>
-                    </CardHeader>
-                    <CardContent>
-                      {appointment.prescription && (
-                        <div className="space-y-4">
-                          <div>
-                            <h4 className="font-medium mb-2">Medications</h4>
-                            <div className="space-y-2">
-                              {appointment.prescription.medications.map((med, index) => (
-                                <div key={index} className="flex justify-between items-center p-3 border rounded-lg">
-                                  <div>
-                                    <p className="font-medium">{med.name}</p>
-                                    <p className="text-sm text-muted-foreground">
-                                      {med.dosage} • {med.frequency} • {med.duration}
-                                    </p>
-                                  </div>
-                                  <Badge variant="secondary">Active</Badge>
-                                </div>
-                              ))}
-                            </div>
-                          </div>
-                          
-                          <div>
-                            <h4 className="font-medium mb-2">Instructions</h4>
-                            <p className="text-sm text-muted-foreground p-3 bg-muted rounded-lg">
-                              {appointment.prescription.instructions}
-                            </p>
-                          </div>
-                        </div>
-                      )}
-                    </CardContent>
-                  </Card>
-                ))}
-              
-              {appointments.filter(apt => apt.prescription).length === 0 && (
-                <Card>
-                  <CardContent className="text-center py-8">
-                    <FileText className="h-12 w-12 mx-auto mb-4 text-muted-foreground" />
-                    <h3 className="font-medium mb-2">No Prescriptions Yet</h3>
-                    <p className="text-muted-foreground">
-                      Your prescriptions from consultations will appear here
-                    </p>
-                  </CardContent>
-                </Card>
-              )}
-            </div>
-          </div>
-        );
-
-      case 'emergency':
-        return (
-          <div className="space-y-6">
-            <div className="bg-red-50 border border-red-200 rounded-lg p-4">
-              <div className="flex items-center gap-2 mb-2">
-                <AlertCircle className="h-5 w-5 text-red-600" />
-                <h2 className="text-xl font-bold text-red-800">Emergency Care</h2>
-              </div>
-              <p className="text-red-700">
-                For life-threatening emergencies, call 911 immediately. This service is for urgent medical consultations.
-              </p>
-            </div>
-            
-            <div className="grid gap-4">
-              <h3 className="text-lg font-semibold">Available Emergency Doctors</h3>
-              {emergencyDoctors.map((doctor) => (
-                <Card key={doctor.id} className="border-red-200">
-                  <CardHeader>
-                    <div className="flex justify-between items-center">
-                      <div className="flex items-center gap-4">
-                        <Avatar>
-                          <AvatarFallback>{doctor.name.split(' ').map(n => n[0]).join('')}</AvatarFallback>
-                        </Avatar>
-                        <div>
-                          <CardTitle className="text-lg">{doctor.name}</CardTitle>
-                          <p className="text-muted-foreground">{doctor.specialty}</p>
-                        </div>
-                      </div>
-                      <Badge variant="destructive">Available Now</Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <div className="flex items-center gap-2 mb-2">
-                      <Star className="h-4 w-4 fill-yellow-400 text-yellow-400" />
-                      <span className="font-medium">{doctor.rating}</span>
-                      <span className="text-muted-foreground">({doctor.experience} years exp.)</span>
-                    </div>
-                  </CardContent>
-                  <CardFooter>
-                    <Button 
-                      variant="destructive" 
-                      className="w-full"
-                      onClick={() => handleEmergencyConsultation(doctor)}
-                    >
-                      Start Emergency Consultation
-                    </Button>
-                  </CardFooter>
-                </Card>
-              ))}
-            </div>
-          </div>
-        );
-
-      default:
-        return (
-          <div className="container mx-auto p-6">
-            {/* Keep existing dashboard content */}
-            <div className="flex justify-between items-center mb-6">
-              <div>
-                <h1 className="text-3xl font-bold">Welcome Back</h1>
-                <p className="text-muted-foreground">Here's your health overview</p>
-              </div>
-              <div className="flex items-center gap-4">
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="icon" className="relative">
-                      <Bell className="h-4 w-4" />
-                      {notifications.filter(n => !n.read).length > 0 && (
-                        <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
-                          {notifications.filter(n => !n.read).length}
-                        </span>
-                      )}
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Notifications</h4>
-                      {notifications.map(notification => (
-                        <div
-                          key={notification.id}
-                          className={`p-2 rounded-lg cursor-pointer ${
-                            notification.read ? 'bg-muted' : 'bg-primary/10'
-                          }`}
-                          onClick={() => handleNotificationClick(notification.id)}
-                        >
-                          <p className="text-sm">{notification.message}</p>
-                          <p className="text-xs text-muted-foreground">
-                            {format(notification.timestamp, 'MMM dd, h:mm a')}
-                          </p>
-                        </div>
-                      ))}
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                <Popover>
-                  <PopoverTrigger asChild>
-                    <Button variant="outline" size="icon">
-                      <Settings className="h-4 w-4" />
-                    </Button>
-                  </PopoverTrigger>
-                  <PopoverContent className="w-80">
-                    <div className="space-y-4">
-                      <h4 className="font-medium">Settings</h4>
-                      <div className="space-y-2">
-                        <div className="flex items-center justify-between">
-                          <Label>Notifications</Label>
-                          <Checkbox
-                            checked={settings.notifications}
-                            onCheckedChange={(checked) => handleSettingsUpdate('notifications', checked)}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label>Email Notifications</Label>
-                          <Checkbox
-                            checked={settings.emailNotifications}
-                            onCheckedChange={(checked) => handleSettingsUpdate('emailNotifications', checked)}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label>Dark Mode</Label>
-                          <Checkbox
-                            checked={settings.darkMode}
-                            onCheckedChange={(checked) => handleSettingsUpdate('darkMode', checked)}
-                          />
-                        </div>
-                        <div className="flex items-center justify-between">
-                          <Label>Auto Record</Label>
-                          <Checkbox
-                            checked={settings.autoRecord}
-                            onCheckedChange={(checked) => handleSettingsUpdate('autoRecord', checked)}
-                          />
-                        </div>
-                      </div>
-                    </div>
-                  </PopoverContent>
-                </Popover>
-                <Button variant="outline" size="icon" onClick={() => setShowHelp(!showHelp)}>
-                  <HelpCircle className="h-4 w-4" />
+          <div className="flex items-center gap-4">
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon" className="relative">
+                  <Bell className="h-4 w-4" />
+                  {notifications.filter(n => !n.read).length > 0 && (
+                    <span className="absolute -top-1 -right-1 h-4 w-4 rounded-full bg-red-500 text-white text-xs flex items-center justify-center">
+                      {notifications.filter(n => !n.read).length}
+                    </span>
+                  )}
                 </Button>
-              </div>
-            </div>
-            
-            {/* Quick Actions */}
-            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-              {quickActions.map((action) => (
-                <Card key={action.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={action.action}>
-                  <CardHeader className="pb-2">
-                    <div className="flex items-center gap-2">
-                      <action.icon className="h-5 w-5 text-primary" />
-                      <CardTitle className="text-lg">{action.title}</CardTitle>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-muted-foreground">{action.description}</p>
-                  </CardContent>
-                </Card>
-              ))}
-            </div>
-
-            {/* Main Dashboard Grid */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              {/* Health Metrics Card */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Health Metrics</CardTitle>
-                  <CardDescription>
-                    Last updated: {format(healthMetrics.lastUpdated, 'MMM dd, h:mm a')}
-                  </CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="grid grid-cols-2 gap-4">
-                    <div className="space-y-2">
-                      <Label>Blood Pressure</Label>
-                      <div className="flex gap-2">
-                        <Input
-                          type="number"
-                          value={healthMetrics.bloodPressure.systolic}
-                          onChange={(e) => handleHealthMetricsUpdate('bloodPressure', {
-                            ...healthMetrics.bloodPressure,
-                            systolic: parseInt(e.target.value)
-                          })}
-                          className="w-20"
-                        />
-                        <span className="self-center">/</span>
-                        <Input
-                          type="number"
-                          value={healthMetrics.bloodPressure.diastolic}
-                          onChange={(e) => handleHealthMetricsUpdate('bloodPressure', {
-                            ...healthMetrics.bloodPressure,
-                            diastolic: parseInt(e.target.value)
-                          })}
-                          className="w-20"
-                        />
-                      </div>
-                      <p className="text-xs text-muted-foreground">mmHg</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Heart Rate</Label>
-                      <Input
-                        type="number"
-                        value={healthMetrics.heartRate}
-                        onChange={(e) => handleHealthMetricsUpdate('heartRate', parseInt(e.target.value))}
-                      />
-                      <p className="text-xs text-muted-foreground">bpm</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Temperature</Label>
-                      <Input
-                        type="number"
-                        value={healthMetrics.temperature}
-                        onChange={(e) => handleHealthMetricsUpdate('temperature', parseFloat(e.target.value))}
-                      />
-                      <p className="text-xs text-muted-foreground">°F</p>
-                    </div>
-                    <div className="space-y-2">
-                      <Label>Weight</Label>
-                      <Input
-                        type="number"
-                        value={healthMetrics.weight}
-                        onChange={(e) => handleHealthMetricsUpdate('weight', parseInt(e.target.value))}
-                      />
-                      <p className="text-xs text-muted-foreground">kg</p>
-                    </div>
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Upcoming Reminders */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Upcoming Reminders</CardTitle>
-                  <CardDescription>Your health schedule</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {upcomingReminders.map((reminder) => (
-                      <div key={reminder.id} className="flex items-center gap-4 p-3 border rounded-lg">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          {reminder.type === 'checkup' && <User className="h-5 w-5 text-primary" />}
-                          {reminder.type === 'medication' && <FileText className="h-5 w-5 text-primary" />}
-                          {reminder.type === 'appointment' && <CalendarIcon className="h-5 w-5 text-primary" />}
-                        </div>
-                        <div>
-                          <p className="font-medium">{reminder.title}</p>
-                          <p className="text-sm text-muted-foreground">{reminder.time}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Health Tips and Recent Activity */}
-            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
-              {/* Health Tips */}
-              <Card>
-                <CardHeader>
-                  <CardTitle>Health Tips</CardTitle>
-                  <CardDescription>Daily wellness advice</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {healthTips.map((tip) => (
-                      <div key={tip.id} className="flex items-start gap-4 p-3 border rounded-lg">
-                        <span className="text-2xl">{tip.icon}</span>
-                        <div>
-                          <p className="font-medium">{tip.title}</p>
-                          <p className="text-sm text-muted-foreground">{tip.description}</p>
-                        </div>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-
-              {/* Recent Activity */}
-              <Card className="lg:col-span-2">
-                <CardHeader>
-                  <CardTitle>Recent Activity</CardTitle>
-                  <CardDescription>Your latest medical interactions</CardDescription>
-                </CardHeader>
-                <CardContent>
-                  <div className="space-y-4">
-                    {dashboardStats.recentActivity.map((activity) => (
-                      <div key={activity.id} className="flex items-center gap-4 p-3 border rounded-lg">
-                        <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
-                          {activity.type === 'appointment' && <CalendarIcon className="h-4 w-4 text-primary" />}
-                          {activity.type === 'prescription' && <FileText className="h-4 w-4 text-primary" />}
-                          {activity.type === 'emergency' && <AlertCircle className="h-4 w-4 text-primary" />}
-                        </div>
-                        <div className="flex-1">
-                          <p className="font-medium">{activity.description}</p>
-                          <p className="text-sm text-muted-foreground">
-                            {format(activity.timestamp, 'MMM dd, h:mm a')}
-                          </p>
-                        </div>
-                        <Badge variant={
-                          activity.status === 'completed' ? 'secondary' :
-                          activity.status === 'pending' ? 'default' :
-                          'destructive'
-                        }>
-                          {activity.status}
-                        </Badge>
-                      </div>
-                    ))}
-                  </div>
-                </CardContent>
-              </Card>
-            </div>
-
-            {/* Medication Reminders */}
-            <Card className="mb-6">
-              <CardHeader>
-                <CardTitle>Medication Reminders</CardTitle>
-                <CardDescription>Upcoming doses</CardDescription>
-              </CardHeader>
-              <CardContent>
-                <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
-                  {medicationReminders.map((reminder) => (
-                    <div key={reminder.id} className="flex items-center justify-between p-4 border rounded-lg">
-                      <div>
-                        <p className="font-medium">{reminder.medication}</p>
-                        <p className="text-sm text-muted-foreground">
-                          {reminder.dosage} - {reminder.frequency}
-                        </p>
-                      </div>
-                      <div className="text-right">
-                        <p className="font-medium">
-                          {format(reminder.nextDose, 'h:mm a')}
-                        </p>
-                        <Button
-                          size="sm"
-                          variant={reminder.status === 'pending' ? 'default' : 'secondary'}
-                          onClick={() => handleMedicationReminder(reminder.id)}
-                          disabled={reminder.status === 'taken'}
-                        >
-                          {reminder.status === 'pending' ? 'Mark as Taken' : 'Taken'}
-                        </Button>
-                      </div>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Notifications</h4>
+                  {notifications.map(notification => (
+                    <div
+                      key={notification.id}
+                      className={`p-2 rounded-lg cursor-pointer ${
+                        notification.read ? 'bg-muted' : 'bg-primary/10'
+                      }`}
+                      onClick={() => handleNotificationClick(notification.id)}
+                    >
+                      <p className="text-sm">{notification.message}</p>
+                      <p className="text-xs text-muted-foreground">
+                        {format(notification.timestamp, 'MMM dd, h:mm a')}
+                      </p>
                     </div>
                   ))}
                 </div>
+              </PopoverContent>
+            </Popover>
+            <Popover>
+              <PopoverTrigger asChild>
+                <Button variant="outline" size="icon">
+                  <Settings className="h-4 w-4" />
+                </Button>
+              </PopoverTrigger>
+              <PopoverContent className="w-80">
+                <div className="space-y-4">
+                  <h4 className="font-medium">Settings</h4>
+                  <div className="space-y-2">
+                    <div className="flex items-center justify-between">
+                      <Label>Notifications</Label>
+                      <Checkbox
+                        checked={settings.notifications}
+                        onCheckedChange={(checked) => handleSettingsUpdate('notifications', checked)}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Email Notifications</Label>
+                      <Checkbox
+                        checked={settings.emailNotifications}
+                        onCheckedChange={(checked) => handleSettingsUpdate('emailNotifications', checked)}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Dark Mode</Label>
+                      <Checkbox
+                        checked={settings.darkMode}
+                        onCheckedChange={(checked) => handleSettingsUpdate('darkMode', checked)}
+                      />
+                    </div>
+                    <div className="flex items-center justify-between">
+                      <Label>Auto Record</Label>
+                      <Checkbox
+                        checked={settings.autoRecord}
+                        onCheckedChange={(checked) => handleSettingsUpdate('autoRecord', checked)}
+                      />
+                    </div>
+                  </div>
+                </div>
+              </PopoverContent>
+            </Popover>
+            <Button variant="outline" size="icon" onClick={() => setShowHelp(!showHelp)}>
+              <HelpCircle className="h-4 w-4" />
+            </Button>
+          </div>
+        </div>
+        
+        {/* Quick Actions */}
+        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+          {quickActions.map((action) => (
+            <Card key={action.id} className="cursor-pointer hover:shadow-lg transition-shadow" onClick={action.action}>
+              <CardHeader className="pb-2">
+                <div className="flex items-center gap-2">
+                  <action.icon className="h-5 w-5 text-primary" />
+                  <CardTitle className="text-lg">{action.title}</CardTitle>
+                </div>
+              </CardHeader>
+              <CardContent>
+                <p className="text-sm text-muted-foreground">{action.description}</p>
               </CardContent>
             </Card>
-          </div>
-        );
-    }
-  };
-
-  try {
-    return (
-      <div className="min-h-screen bg-background">
-        {/* Navigation Tabs */}
-        <div className="border-b">
-          <div className="container mx-auto px-4">
-            <Tabs value={activeTab} onValueChange={setActiveTab} className="w-full">
-              <TabsList className="grid w-full grid-cols-5">
-                <TabsTrigger value="dashboard">Dashboard</TabsTrigger>
-                <TabsTrigger value="find-doctor">Find Doctor</TabsTrigger>
-                <TabsTrigger value="upload-records">Upload Records</TabsTrigger>
-                <TabsTrigger value="prescriptions">Prescriptions</TabsTrigger>
-                <TabsTrigger value="emergency">Emergency</TabsTrigger>
-              </TabsList>
-            </Tabs>
-          </div>
+          ))}
         </div>
 
-        {/* Content */}
-        <div className="container mx-auto p-6">
-          {renderTabContent()}
+        {/* Main Dashboard Grid */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Health Metrics Card */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Health Metrics</CardTitle>
+              <CardDescription>
+                Last updated: {format(healthMetrics.lastUpdated, 'MMM dd, h:mm a')}
+              </CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <Label>Blood Pressure</Label>
+                  <div className="flex gap-2">
+                    <Input
+                      type="number"
+                      value={healthMetrics.bloodPressure.systolic}
+                      onChange={(e) => handleHealthMetricsUpdate('bloodPressure', {
+                        ...healthMetrics.bloodPressure,
+                        systolic: parseInt(e.target.value)
+                      })}
+                      className="w-20"
+                    />
+                    <span className="self-center">/</span>
+                    <Input
+                      type="number"
+                      value={healthMetrics.bloodPressure.diastolic}
+                      onChange={(e) => handleHealthMetricsUpdate('bloodPressure', {
+                        ...healthMetrics.bloodPressure,
+                        diastolic: parseInt(e.target.value)
+                      })}
+                      className="w-20"
+                    />
+                  </div>
+                  <p className="text-xs text-muted-foreground">mmHg</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Heart Rate</Label>
+                  <Input
+                    type="number"
+                    value={healthMetrics.heartRate}
+                    onChange={(e) => handleHealthMetricsUpdate('heartRate', parseInt(e.target.value))}
+                  />
+                  <p className="text-xs text-muted-foreground">bpm</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Temperature</Label>
+                  <Input
+                    type="number"
+                    value={healthMetrics.temperature}
+                    onChange={(e) => handleHealthMetricsUpdate('temperature', parseFloat(e.target.value))}
+                  />
+                  <p className="text-xs text-muted-foreground">°F</p>
+                </div>
+                <div className="space-y-2">
+                  <Label>Weight</Label>
+                  <Input
+                    type="number"
+                    value={healthMetrics.weight}
+                    onChange={(e) => handleHealthMetricsUpdate('weight', parseInt(e.target.value))}
+                  />
+                  <p className="text-xs text-muted-foreground">kg</p>
+                </div>
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Upcoming Reminders */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Upcoming Reminders</CardTitle>
+              <CardDescription>Your health schedule</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {upcomingReminders.map((reminder) => (
+                  <div key={reminder.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      {reminder.type === 'checkup' && <User className="h-5 w-5 text-primary" />}
+                      {reminder.type === 'medication' && <FileText className="h-5 w-5 text-primary" />}
+                      {reminder.type === 'appointment' && <CalendarIcon className="h-5 w-5 text-primary" />}
+                    </div>
+                    <div>
+                      <p className="font-medium">{reminder.title}</p>
+                      <p className="text-sm text-muted-foreground">{reminder.time}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
         </div>
+
+        {/* Health Tips and Recent Activity */}
+        <div className="grid grid-cols-1 lg:grid-cols-3 gap-6 mb-6">
+          {/* Health Tips */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Health Tips</CardTitle>
+              <CardDescription>Daily wellness advice</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {healthTips.map((tip) => (
+                  <div key={tip.id} className="flex items-start gap-4 p-3 border rounded-lg">
+                    <span className="text-2xl">{tip.icon}</span>
+                    <div>
+                      <p className="font-medium">{tip.title}</p>
+                      <p className="text-sm text-muted-foreground">{tip.description}</p>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Recent Activity */}
+          <Card className="lg:col-span-2">
+            <CardHeader>
+              <CardTitle>Recent Activity</CardTitle>
+              <CardDescription>Your latest medical interactions</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {dashboardStats.recentActivity.map((activity) => (
+                  <div key={activity.id} className="flex items-center gap-4 p-3 border rounded-lg">
+                    <div className="h-10 w-10 rounded-full bg-primary/10 flex items-center justify-center">
+                      {activity.type === 'appointment' && <CalendarIcon className="h-4 w-4 text-primary" />}
+                      {activity.type === 'prescription' && <FileText className="h-4 w-4 text-primary" />}
+                      {activity.type === 'emergency' && <AlertCircle className="h-4 w-4 text-primary" />}
+                    </div>
+                    <div className="flex-1">
+                      <p className="font-medium">{activity.description}</p>
+                      <p className="text-sm text-muted-foreground">
+                        {format(activity.timestamp, 'MMM dd, h:mm a')}
+                      </p>
+                    </div>
+                    <Badge variant={
+                      activity.status === 'completed' ? 'secondary' :
+                      activity.status === 'pending' ? 'default' :
+                      'destructive'
+                    }>
+                      {activity.status}
+                    </Badge>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+        </div>
+
+        {/* Medication Reminders */}
+        <Card className="mb-6">
+          <CardHeader>
+            <CardTitle>Medication Reminders</CardTitle>
+            <CardDescription>Upcoming doses</CardDescription>
+          </CardHeader>
+          <CardContent>
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+              {medicationReminders.map((reminder) => (
+                <div key={reminder.id} className="flex items-center justify-between p-4 border rounded-lg">
+                  <div>
+                    <p className="font-medium">{reminder.medication}</p>
+                    <p className="text-sm text-muted-foreground">
+                      {reminder.dosage} - {reminder.frequency}
+                    </p>
+                  </div>
+                  <div className="text-right">
+                    <p className="font-medium">
+                      {format(reminder.nextDose, 'h:mm a')}
+                    </p>
+                    <Button
+                      size="sm"
+                      variant={reminder.status === 'pending' ? 'default' : 'secondary'}
+                      onClick={() => handleMedicationReminder(reminder.id)}
+                      disabled={reminder.status === 'taken'}
+                    >
+                      {reminder.status === 'pending' ? 'Mark as Taken' : 'Taken'}
+                    </Button>
+                  </div>
+                </div>
+              ))}
+            </div>
+          </CardContent>
+        </Card>
 
         {/* Emergency Button */}
         <div className="fixed bottom-6 right-6">

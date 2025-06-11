@@ -1,188 +1,194 @@
 
 import { Button } from "@/components/ui/button";
-import { useLocation } from "react-router-dom";
-import { useState, useEffect } from "react";
-import { Menu, X, Heart, LogIn } from "lucide-react";
-import { useAuth } from '@/contexts/AuthContext';
-import AuthModal from "./auth/AuthModal";
+import { Badge } from "@/components/ui/badge";
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { 
+  LayoutDashboard, 
+  Stethoscope, 
+  Pill, 
+  Activity, 
+  User,
+  Heart,
+  Video,
+  BookOpen,
+  LogOut,
+  LucideProps
+} from "lucide-react";
+import { authService } from "@/services/api";
+import { useState } from "react";
+import { useNavigate } from 'react-router-dom';
 
 interface NavigationProps {
-  onAuthChange?: (isAuthenticated: boolean) => void;
+  onAuthChange: (isAuth: boolean) => void;
+  isAuthenticated?: boolean;
   activeTab?: string;
   onTabChange?: (tab: string) => void;
 }
 
-const Navigation = ({ onAuthChange, activeTab, onTabChange }: NavigationProps) => {
-  const [isMobileMenuOpen, setIsMobileMenuOpen] = useState(false);
-  const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const location = useLocation();
-  const { isAuthenticated, logout } = useAuth();
+interface MenuItem {
+  id: string;
+  title: string;
+  icon: React.ForwardRefExoticComponent<React.PropsWithoutRef<LucideProps> & React.RefAttributes<SVGSVGElement>>;
+  external?: boolean;
+  href?: string;
+}
 
-  useEffect(() => {
-    if (onAuthChange) {
-      onAuthChange(isAuthenticated);
+const menuItems: MenuItem[] = [
+  {
+    id: 'dashboard',
+    title: "Dashboard",
+    icon: LayoutDashboard,
+  },
+  {
+    id: 'symptoms',
+    title: "Symptom Checker",
+    icon: Stethoscope,
+  },
+  {
+    id: 'medications',
+    title: "Medications",
+    icon: Pill,
+  },
+  {
+    id: 'monitoring',
+    title: "Health Monitoring",
+    icon: Activity,
+  },
+  {
+    id: 'about',
+    title: "About",
+    icon: Heart,
+    href: '/about'
+  },
+  {
+    id: 'education',
+    title: "Health Education",
+    icon: BookOpen,
+  },
+  {
+    id: 'telemedicine',
+    title: "Telemedicine",
+    icon: Video,
+  },
+];
+
+const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabChange }: NavigationProps) => {
+  const [user, setUser] = useState(null);
+  const navigate = useNavigate();
+
+  const handleLogin = async () => {
+    try {
+      const email = prompt("Enter your email");
+      const password = prompt("Enter your password");
+      if (email && password) {
+        const userData = await authService.login(email, password);
+        setUser(userData);
+        onAuthChange(true);
+      }
+    } catch (error) {
+      console.error("Login error:", error);
+      alert("Login failed. Please check your credentials.");
     }
-  }, [isAuthenticated, onAuthChange]);
+  };
 
-  // Navigation items
-  const navigationItems = [
-    { path: "/", label: "Dashboard", tab: "dashboard" },
-    { path: "/symptom-checker", label: "Symptom Checker", tab: "symptoms" },
-    { path: "/medication", label: "Medication Manager", tab: "medication" },
-    { path: "/health-monitoring", label: "Health Monitor", tab: "monitoring" },
-    { path: "/telemedicine", label: "Telemedicine", tab: "telemedicine" },
-    { path: "/education", label: "Health Education", tab: "education" },
-    { path: "/about", label: "About", tab: "about" }
-  ].filter(item => {
-    // Filter out protected routes when not authenticated
-    const protectedRoutes = ['/symptom-checker', '/medication', '/health-monitoring', '/telemedicine', '/education'];
-    return !isAuthenticated ? item.path === '/' || item.path === '/about' : true;
-  });
+  const handleLogout = () => {
+    authService.logout();
+    setUser(null);
+    onAuthChange(false);
+  };
 
-  const handleNavClick = (item: any) => {
-    if (onTabChange && item.tab) {
-      onTabChange(item.tab);
+  const handleTabChange = (tab: string) => {
+    if (onTabChange) {
+      onTabChange(tab);
     }
-    setIsMobileMenuOpen(false);
   };
 
   return (
-    <nav className="bg-white shadow-lg border-b border-gray-100 sticky top-0 z-50">
-      <div className="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="flex justify-between items-center h-16">
+    <nav className="fixed top-0 left-0 right-0 z-50 bg-white border-b border-gray-200 shadow-sm">
+      <div className="container mx-auto px-4">
+        <div className="flex items-center justify-between h-16">
           {/* Logo */}
-          <div className="flex items-center">
-            <div className="flex items-center space-x-2" onClick={() => handleNavClick({ tab: "dashboard" })}>
-              <div className="w-8 h-8 bg-gradient-to-r from-blue-600 to-green-600 rounded-lg flex items-center justify-center">
-                <Heart className="w-5 h-5 text-white" />
-              </div>
-              <span className="text-2xl font-bold bg-gradient-to-r from-blue-600 to-green-600 bg-clip-text text-transparent">
-                Nexora
-              </span>
+          <div className="flex items-center space-x-2">
+            <div className="w-8 h-8 bg-blue-600 rounded-lg flex items-center justify-center">
+              <Heart className="w-5 h-5 text-white" />
             </div>
+            <span className="text-xl font-bold text-gray-900">Nexora</span>
           </div>
 
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center space-x-1">
-            {navigationItems.map((item) => (
-              <div
-                key={item.path}
-                onClick={() => handleNavClick(item)}
-                className={`px-4 py-2 rounded-lg text-sm font-medium transition-all duration-200 cursor-pointer ${
-                  location.pathname === item.path || activeTab === item.tab
-                    ? "text-blue-600 bg-blue-50 shadow-sm"
-                    : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                }`}
-              >
-                {item.label}
-              </div>
-            ))}
-          </div>
+          {/* Navigation Menu - Only show when authenticated */}
+          {isAuthenticated && onTabChange && (
+            <div className="hidden md:flex items-center space-x-1">
+              {menuItems.map((item) => (
+                <Button
+                  key={item.id}
+                  variant={activeTab === item.id ? "default" : "ghost"}
+                  size="sm"
+                  onClick={() => {
+                    if (item.href) {
+                      navigate(item.href);
+                    } else {
+                      onTabChange(item.id);
+                    }
+                  }}
+                  className="flex items-center space-x-2"
+                >
+                  <item.icon className="w-4 h-4" />
+                  <span>{item.title}</span>
+                </Button>
+              ))}
+            </div>
+          )}
 
-          {/* Auth Button */}
-          <div className="hidden md:flex items-center space-x-3">
-            {!isAuthenticated ? (
-              <Button
-                variant="ghost"
-                size="sm"
-                onClick={() => setIsAuthModalOpen(true)}
-                className="text-gray-600 hover:text-blue-600"
-              >
-                <LogIn className="w-4 h-4 mr-2" />
-                Sign in
-              </Button>
+          {/* User Actions */}
+          <div className="flex items-center space-x-4">
+            {isAuthenticated ? (
+              <>
+                <Badge variant="secondary" className="bg-green-100 text-green-800">
+                  Patient Account
+                </Badge>
+                <DropdownMenu>
+                  <DropdownMenuTrigger asChild>
+                    <Button variant="ghost" className="w-8 h-8 rounded-full bg-blue-600 text-white">
+                      JD
+                    </Button>
+                  </DropdownMenuTrigger>
+                  <DropdownMenuContent align="end" className="w-56 bg-white">
+                    <DropdownMenuLabel>John Doe</DropdownMenuLabel>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem>Settings</DropdownMenuItem>
+                    <DropdownMenuItem>Support</DropdownMenuItem>
+                    <DropdownMenuSeparator />
+                    <DropdownMenuItem onClick={handleLogout}>
+                      <LogOut className="w-4 h-4 mr-2" />
+                      Sign out
+                    </DropdownMenuItem>
+                  </DropdownMenuContent>
+                </DropdownMenu>
+              </>
             ) : (
               <div className="flex items-center space-x-2">
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  <span className="text-sm">Welcome!</span>
+                <Button variant="ghost" onClick={handleLogin}>
+                  Sign In
                 </Button>
-                <Button
-                  variant="ghost"
-                  size="sm"
-                  onClick={logout}
-                  className="text-gray-600 hover:text-blue-600"
-                >
-                  <LogIn className="w-4 h-4 mr-2 rotate-180" />
-                  Sign out
+                <Button className="bg-blue-600 hover:bg-blue-700" onClick={() => authService.register({
+                  name: prompt("Enter your name"),
+                  email: prompt("Enter your email"),
+                  password: prompt("Enter your password"),
+                  role: 'patient'
+                }).then(() => handleLogin())}>
+                  Sign Up
                 </Button>
               </div>
             )}
           </div>
-
-          {/* Mobile menu button */}
-          <div className="md:hidden flex items-center">
-            <Button
-              variant="ghost"
-              size="sm"
-              onClick={() => setIsMobileMenuOpen(!isMobileMenuOpen)}
-              className="text-gray-600 hover:text-blue-600"
-            >
-              {isMobileMenuOpen ? <X className="h-6 w-6" /> : <Menu className="h-6 w-6" />}
-            </Button>
-          </div>
         </div>
-
-        {/* Mobile Navigation */}
-        {isMobileMenuOpen && (
-          <div className="md:hidden border-t border-gray-100">
-            <div className="px-2 pt-4 pb-6 space-y-2 bg-white">
-              {navigationItems.map((item) => (
-                <div
-                  key={item.path}
-                  onClick={() => handleNavClick(item)}
-                  className={`block px-4 py-3 rounded-lg text-base font-medium transition-all duration-200 cursor-pointer ${
-                    location.pathname === item.path || activeTab === item.tab
-                      ? "text-blue-600 bg-blue-50 shadow-sm"
-                      : "text-gray-600 hover:text-blue-600 hover:bg-gray-50"
-                  }`}
-                >
-                  {item.label}
-                </div>
-              ))}
-              
-              {/* Mobile Auth Button */}
-              <div className="border-t border-gray-100 pt-4 mt-4">
-                {!isAuthenticated ? (
-                  <Button
-                    variant="ghost"
-                    size="sm"
-                    onClick={() => setIsAuthModalOpen(true)}
-                    className="w-full justify-start text-gray-600 hover:text-blue-600"
-                  >
-                    <LogIn className="w-4 h-4 mr-2" />
-                    Sign in
-                  </Button>
-                ) : (
-                  <div className="space-y-2">
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      className="w-full justify-start text-gray-600 hover:text-blue-600"
-                    >
-                      <span className="text-sm">Welcome!</span>
-                    </Button>
-                    <Button
-                      variant="ghost"
-                      size="sm"
-                      onClick={logout}
-                      className="w-full justify-start text-gray-600 hover:text-blue-600"
-                    >
-                      <LogIn className="w-4 h-4 mr-2 rotate-180" />
-                      Sign out
-                    </Button>
-                  </div>
-                )}
-              </div>
-            </div>
-          </div>
-        )}
-
-        {/* Auth Modal */}
-        <AuthModal isOpen={isAuthModalOpen} onClose={() => setIsAuthModalOpen(false)} />
       </div>
     </nav>
   );
