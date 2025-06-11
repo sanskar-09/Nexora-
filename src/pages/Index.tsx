@@ -4,7 +4,10 @@ import { useLocation } from 'react-router-dom';
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
 import Navigation from '@/components/Navigation';
+=======
+>>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
 =======
 >>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
 =======
@@ -45,6 +48,7 @@ const Index = () => {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
   const renderContent = () => {
     if (location.pathname === '/about') {
       return null; // About page is handled by the About component
@@ -68,6 +72,8 @@ const Index = () => {
     }
   };
 
+=======
+>>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
 =======
 >>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
 =======
@@ -196,6 +202,7 @@ const Index = () => {
 <<<<<<< HEAD
 <<<<<<< HEAD
 <<<<<<< HEAD
+<<<<<<< HEAD
     <div className="min-h-screen bg-gray-50">
       <Navigation 
         onAuthChange={setIsAuthenticated} 
@@ -209,6 +216,8 @@ const Index = () => {
         </div>
       </main>
 =======
+=======
+>>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
 =======
 >>>>>>> parent of e5b253c (Fix: Improve navbar UI and functionality)
 =======
