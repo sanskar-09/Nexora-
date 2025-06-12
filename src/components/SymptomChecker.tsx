@@ -1,3 +1,4 @@
+
 import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -23,7 +24,6 @@ import {
   History,
   Info
 } from 'lucide-react';
-import { symptomService } from '@/services/api';
 
 const symptoms = [
   { id: 'fever', label: 'Fever', category: 'general' },
@@ -438,18 +438,16 @@ const SymptomChecker = () => {
   const [symptomHistory, setSymptomHistory] = useState<any[]>([]);
 
   useEffect(() => {
-    fetchSymptomHistory();
-  }, []);
-
-  const fetchSymptomHistory = async () => {
-    try {
-      const history = await symptomService.getSymptomHistory();
-      setSymptomHistory(history.data);
-    } catch (err) {
-      console.error("Failed to fetch symptom history:", err);
-      setError("Failed to load symptom history.");
+    // Load symptom history from localStorage
+    const savedHistory = localStorage.getItem('symptomHistory');
+    if (savedHistory) {
+      try {
+        setSymptomHistory(JSON.parse(savedHistory));
+      } catch (err) {
+        console.error('Failed to parse symptom history:', err);
+      }
     }
-  };
+  }, []);
 
   const handleSymptomChange = (symptomId: string, checked: boolean) => {
     setSelectedSymptoms(prev =>
@@ -468,10 +466,25 @@ const SymptomChecker = () => {
 
     setLoading(true);
     setError(null);
+    
     try {
-      const result = await symptomService.checkSymptoms(selectedSymptoms);
+      // Use the local analysis function
+      const result = getSymptomAnalysis(selectedSymptoms);
+      
+      // Add timestamp and save to history
+      const historyEntry = {
+        ...result,
+        symptoms: selectedSymptoms.map(id => symptoms.find(s => s.id === id)?.label).filter(Boolean),
+        date: new Date().toLocaleDateString(),
+        timestamp: new Date().toISOString()
+      };
+      
+      // Save to localStorage
+      const updatedHistory = [historyEntry, ...symptomHistory.slice(0, 9)]; // Keep last 10 entries
+      setSymptomHistory(updatedHistory);
+      localStorage.setItem('symptomHistory', JSON.stringify(updatedHistory));
+      
       setAnalysisResult(result);
-      fetchSymptomHistory(); // Refresh history after new analysis
     } catch (err) {
       console.error("Symptom analysis failed:", err);
       setError("Failed to analyze symptoms. Please try again.");
@@ -544,6 +557,14 @@ const SymptomChecker = () => {
               </CardDescription>
             </CardHeader>
             <CardContent className="p-6">
+              {/* Error Display */}
+              {error && (
+                <Alert className="mb-6 border-red-300 bg-red-50">
+                  <AlertTriangle className="h-4 w-4 text-red-600" />
+                  <AlertDescription className="text-red-800">{error}</AlertDescription>
+                </Alert>
+              )}
+              
               {/* Symptoms by Category */}
               <div className="space-y-6">
                 {Object.entries(groupedSymptoms).map(([category, categorySymptoms]) => (
@@ -739,18 +760,18 @@ const SymptomChecker = () => {
         </div>
 
         {/* Symptom History */}
-        <Card>
-          <CardHeader>
-            <CardTitle className="flex items-center space-x-2">
-              <History className="w-5 h-5" />
-              <span>Symptom History</span>
-            </CardTitle>
-            <CardDescription>Review your past symptom analysis results.</CardDescription>
-          </CardHeader>
-          <CardContent>
-            {symptomHistory.length > 0 ? (
+        {symptomHistory.length > 0 && (
+          <Card className="mt-8">
+            <CardHeader>
+              <CardTitle className="flex items-center space-x-2">
+                <History className="w-5 h-5" />
+                <span>Recent Symptom Analysis History</span>
+              </CardTitle>
+              <CardDescription>Review your past symptom analysis results.</CardDescription>
+            </CardHeader>
+            <CardContent>
               <div className="space-y-4">
-                {symptomHistory.map((entry, index) => (
+                {symptomHistory.slice(0, 5).map((entry, index) => (
                   <Alert key={index} variant={entry.severity === 'Critical' ? 'destructive' : 'default'}>
                     <Info className="w-4 h-4" />
                     <AlertDescription className="font-medium">
@@ -761,11 +782,9 @@ const SymptomChecker = () => {
                   </Alert>
                 ))}
               </div>
-            ) : (
-              <p className="text-sm text-gray-500">No symptom history found.</p>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+        )}
 
         {/* Medical Disclaimer */}
         <Card className="mt-12 bg-gradient-to-r from-yellow-50 to-orange-50 border-yellow-300 shadow-lg">
