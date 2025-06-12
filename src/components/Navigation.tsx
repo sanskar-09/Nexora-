@@ -1,3 +1,4 @@
+
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import {
@@ -68,7 +69,7 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
   const [user, setUser] = useState(null);
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const navigate = useNavigate();
-  const { logout } = useAuth();
+  const { logout, user: authUser } = useAuth();
 
   const handleLogin = () => {
     navigate('/login');
@@ -94,6 +95,37 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
     if (onTabChange) {
       onTabChange('dashboard');
     }
+  };
+
+  const handleProfileSettings = () => {
+    if (onTabChange) {
+      onTabChange('profile');
+    }
+  };
+
+  const handleMedicalRecords = () => {
+    if (onTabChange) {
+      onTabChange('telemedicine');
+      // Small delay to ensure tab change, then switch to records tab
+      setTimeout(() => {
+        const recordsTab = document.querySelector('[data-value="records"]') as HTMLElement;
+        if (recordsTab) {
+          recordsTab.click();
+        }
+      }, 100);
+    }
+  };
+
+  const handleAccountSettings = () => {
+    // For now, redirect to profile settings
+    if (onTabChange) {
+      onTabChange('profile');
+    }
+  };
+
+  const handleSupport = () => {
+    // Open support in a new tab or show support modal
+    window.open('mailto:support@nexora.com?subject=Support Request', '_blank');
   };
 
   return (
@@ -172,24 +204,35 @@ const Navigation = ({ onAuthChange, isAuthenticated = false, activeTab, onTabCha
                     </Button>
                   </DropdownMenuTrigger>
                   <DropdownMenuContent align="end" className="w-56 bg-white shadow-xl border-gray-200">
-                    <DropdownMenuLabel className="text-gray-900">John Doe</DropdownMenuLabel>
+                    <DropdownMenuLabel className="text-gray-900">
+                      {authUser?.name || 'John Doe'}
+                    </DropdownMenuLabel>
                     <DropdownMenuSeparator />
                     <DropdownMenuItem 
-                      onClick={() => handleTabChange('profile')}
+                      onClick={handleProfileSettings}
                       className="hover:bg-gray-50 cursor-pointer"
                     >
                       <User className="w-4 h-4 mr-2" />
                       Profile Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer">
+                    <DropdownMenuItem 
+                      onClick={handleMedicalRecords}
+                      className="hover:bg-gray-50 cursor-pointer"
+                    >
                       <FileText className="w-4 h-4 mr-2" />
                       Medical Records
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer">
+                    <DropdownMenuItem 
+                      onClick={handleAccountSettings}
+                      className="hover:bg-gray-50 cursor-pointer"
+                    >
                       <Settings className="w-4 h-4 mr-2" />
                       Account Settings
                     </DropdownMenuItem>
-                    <DropdownMenuItem className="hover:bg-gray-50 cursor-pointer">
+                    <DropdownMenuItem 
+                      onClick={handleSupport}
+                      className="hover:bg-gray-50 cursor-pointer"
+                    >
                       <Heart className="w-4 h-4 mr-2" />
                       Support
                     </DropdownMenuItem>

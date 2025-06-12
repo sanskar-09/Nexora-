@@ -17,13 +17,16 @@ import {
   Download,
   Eye,
   CalendarPlus,
-  CalendarCheck
+  CalendarCheck,
+  Upload,
+  Plus
 } from "lucide-react";
 import AppointmentScheduler from './AppointmentScheduler';
-import MedicalRecords from './MedicalRecords';
+import UploadRecords from './UploadRecords';
 
 const Telemedicine = () => {
   const [activeTab, setActiveTab] = useState('consultations');
+  const [showUploadModal, setShowUploadModal] = useState(false);
 
   console.log('Telemedicine component rendering');
 
@@ -78,6 +81,41 @@ const Telemedicine = () => {
     }
   ];
 
+  const medicalRecords = [
+    {
+      id: 1,
+      title: "Complete Blood Count (CBC)",
+      type: "Lab Result",
+      provider: "Central Medical Lab",
+      date: "2024-01-15",
+      status: "completed"
+    },
+    {
+      id: 2,
+      title: "Chest X-Ray",
+      type: "Imaging",
+      provider: "City Hospital",
+      date: "2024-01-10",
+      status: "completed"
+    },
+    {
+      id: 3,
+      title: "Annual Physical Exam",
+      type: "Visit Summary",
+      provider: "Dr. Smith's Clinic",
+      date: "2024-01-05",
+      status: "completed"
+    }
+  ];
+
+  const handleUploadRecord = async (file: File, metadata: any) => {
+    // Simulate upload
+    console.log('Uploading record:', file.name, metadata);
+    // In a real app, you would upload to a server or cloud storage
+    await new Promise(resolve => setTimeout(resolve, 2000));
+    setShowUploadModal(false);
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -103,7 +141,7 @@ const Telemedicine = () => {
           </TabsTrigger>
           <TabsTrigger value="records" className="flex items-center space-x-2">
             <FileText className="w-4 h-4" />
-            <span>Medical Records</span>
+            <span>Documents & Files</span>
           </TabsTrigger>
           <TabsTrigger value="doctors" className="flex items-center space-x-2">
             <User className="w-4 h-4" />
@@ -199,8 +237,71 @@ const Telemedicine = () => {
           <AppointmentScheduler />
         </TabsContent>
 
-        <TabsContent value="records">
-          <MedicalRecords />
+        <TabsContent value="records" className="space-y-6">
+          <div className="flex items-center justify-between">
+            <div>
+              <h2 className="text-2xl font-bold">Documents & Files</h2>
+              <p className="text-gray-600">Manage your medical records and documents</p>
+            </div>
+            <Button onClick={() => setShowUploadModal(true)} className="flex items-center space-x-2">
+              <Plus className="w-4 h-4" />
+              <span>Upload New Document</span>
+            </Button>
+          </div>
+
+          {/* Medical Records List */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Medical Records</CardTitle>
+              <CardDescription>Your uploaded medical documents and records</CardDescription>
+            </CardHeader>
+            <CardContent>
+              <div className="space-y-4">
+                {medicalRecords.map((record) => (
+                  <div key={record.id} className="flex items-center justify-between p-4 border rounded-lg hover:bg-gray-50">
+                    <div className="flex items-center space-x-4">
+                      <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center">
+                        <FileText className="w-6 h-6 text-blue-600" />
+                      </div>
+                      <div>
+                        <h4 className="font-semibold">{record.title}</h4>
+                        <p className="text-sm text-gray-600">{record.type} • {record.provider}</p>
+                        <p className="text-xs text-gray-500">{record.date}</p>
+                      </div>
+                    </div>
+                    <div className="flex items-center space-x-2">
+                      <Badge variant="outline">{record.status}</Badge>
+                      <Button size="sm" variant="outline">
+                        <Eye className="w-4 h-4 mr-2" />
+                        View
+                      </Button>
+                      <Button size="sm" variant="outline">
+                        <Download className="w-4 h-4 mr-2" />
+                        Download
+                      </Button>
+                    </div>
+                  </div>
+                ))}
+              </div>
+            </CardContent>
+          </Card>
+
+          {/* Upload Modal */}
+          {showUploadModal && (
+            <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center z-50">
+              <div className="bg-white rounded-lg max-w-2xl w-full mx-4 max-h-[90vh] overflow-y-auto">
+                <div className="p-6">
+                  <div className="flex items-center justify-between mb-4">
+                    <h3 className="text-lg font-semibold">Upload New Document</h3>
+                    <Button variant="ghost" onClick={() => setShowUploadModal(false)}>
+                      ×
+                    </Button>
+                  </div>
+                  <UploadRecords onUpload={handleUploadRecord} />
+                </div>
+              </div>
+            </div>
+          )}
         </TabsContent>
 
         <TabsContent value="doctors" className="space-y-6">
