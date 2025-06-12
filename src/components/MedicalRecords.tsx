@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -39,62 +39,38 @@ interface HealthMetric {
 }
 
 const MedicalRecords = () => {
-  const [records, setRecords] = useState<MedicalRecord[]>([
-    {
-      id: 1,
-      type: 'lab_result',
-      title: 'Complete Blood Count (CBC)',
-      date: parseISO('2023-12-15'),
-      provider: 'Central Medical Lab',
-      status: 'normal',
-      details: 'All values within normal range. Hemoglobin: 14.2 g/dL, White Blood Cells: 7.5 x10^9/L, Platelets: 250 x10^9/L'
-    },
-    {
-      id: 2,
-      type: 'imaging',
-      title: 'Chest X-Ray',
-      date: parseISO('2023-11-20'),
-      provider: 'City Radiology Center',
-      status: 'normal',
-      details: 'No abnormalities detected. Lungs clear. Heart size normal.'
-    },
-    {
-      id: 3,
-      type: 'visit_summary',
-      title: 'Annual Physical Examination',
-      date: parseISO('2023-10-05'),
-      provider: 'Dr. Sarah Johnson',
-      status: 'completed',
-      details: 'Routine physical examination. Blood pressure: 120/80 mmHg. Heart rate: 72 bpm. Weight: 165 lbs. Overall health status: Good.'
-    },
-    {
-      id: 4,
-      type: 'lab_result',
-      title: 'Lipid Panel',
-      date: parseISO('2023-10-05'),
-      provider: 'Central Medical Lab',
-      status: 'abnormal',
-      details: 'Total Cholesterol: 210 mg/dL (High), LDL: 140 mg/dL (High), HDL: 45 mg/dL, Triglycerides: 150 mg/dL'
-    },
-    {
-      id: 5,
-      type: 'vaccination',
-      title: 'Influenza Vaccine',
-      date: parseISO('2023-09-15'),
-      provider: 'Community Health Clinic',
-      status: 'completed',
-      details: 'Annual influenza vaccination administered. Batch number: FL2023-456. No adverse reactions.'
-    },
-    {
-      id: 6,
-      type: 'prescription',
-      title: 'Lisinopril Prescription',
-      date: parseISO('2023-10-05'),
-      provider: 'Dr. Sarah Johnson',
-      status: 'completed',
-      details: 'Lisinopril 10mg, once daily. 30-day supply with 3 refills. For blood pressure management.'
-    }
-  ]);
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
+
+  useEffect(() => {
+    const fetchRecords = async () => {
+      try {
+        const response = await healthDataService.getHealthData();
+        const fetchedRecords: MedicalRecord[] = response.data
+          .filter((item: any) => item.type === 'medical_record')
+          .map((item: any) => ({
+            id: item._id,
+            type: item.value.type,
+            title: item.value.title,
+            date: new Date(item.date),
+            provider: item.value.provider,
+            status: item.value.status || 'completed',
+            details: item.notes,
+            attachmentUrl: item.fileUrl
+          }));
+        console.log("Fetched Medical Records:", fetchedRecords);
+        setRecords(fetchedRecords);
+      } catch (error) {
+        console.error("Error fetching medical records:", error);
+        toast({
+          title: "Error",
+          description: "Failed to load medical records. Please try again.",
+          variant: "destructive",
+        });
+      }
+    };
+
+    fetchRecords();
+  }, []);
 
   const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([
     {
@@ -210,9 +186,16 @@ const MedicalRecords = () => {
   };
 
   const handleFileUpload = async (file: File, metadata: RecordMetadata) => {
-    const reader = new FileReader();
-    reader.onload = async (e) => {
-      const fileContent = e.target?.result as string;
+    try {
+      // Create FormData to send file
+      const formData = new FormData();
+      formData.append('file', file);
+      formData.append('metadata', JSON.stringify(metadata));
+
+      // Upload file and get URL
+      const response = await healthDataService.addHealthData(formData);
+      const fileUrl = response.data.fileUrl;
+
       const newRecord: MedicalRecord = {
         id: records.length + 1,
         type: metadata.type,
@@ -220,30 +203,23 @@ const MedicalRecords = () => {
         date: metadata.date,
         provider: metadata.provider,
         status: 'normal',
-        details: `Uploaded via app. Content preview: ${fileContent.substring(0, 50)}...`,
-        attachmentUrl: '#' // Placeholder for actual file URL
+        details: `Uploaded via app. File: ${file.name}`,
+        attachmentUrl: fileUrl
       };
 
-      try {
-        // Simulate API call to upload record
-        // await new Promise(resolve => setTimeout(resolve, 1000));
-        await healthDataService.addHealthData({ type: "MedicalRecord", data: newRecord, fileContent });
-
-        setRecords(prev => [...prev, newRecord]);
-        toast({
-          title: "File Uploaded",
-          description: `${file.name} has been successfully uploaded as a ${metadata.type} record.`,
-        });
-      } catch (error) {
-        console.error("Error uploading file:", error);
-        toast({
-          title: "Upload Failed",
-          description: "There was an error uploading your file. Please try again.",
-          variant: "destructive",
-        });
-      }
-    };
-    reader.readAsText(file);
+      setRecords(prev => [...prev, newRecord]);
+      toast({
+        title: "File Uploaded",
+        description: `${file.name} has been successfully uploaded as a ${metadata.type} record.`,
+      });
+    } catch (error) {
+      console.error("Error uploading file:", error);
+      toast({
+        title: "Upload Failed",
+        description: "There was an error uploading your file. Please try again.",
+        variant: "destructive",
+      });
+    }
   };
 
   const handleDownload = (record: MedicalRecord) => {

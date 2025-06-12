@@ -9,7 +9,7 @@ const healthDataSchema = new mongoose.Schema(
     },
     type: {
       type: String,
-      enum: ['blood_pressure', 'heart_rate', 'blood_sugar', 'weight', 'temperature', 'oxygen_level', 'sleep', 'exercise', 'other'],
+      enum: ['blood_pressure', 'heart_rate', 'blood_sugar', 'weight', 'temperature', 'oxygen_level', 'sleep', 'exercise', 'medical_record', 'other'],
       required: true,
     },
     value: {
@@ -28,6 +28,9 @@ const healthDataSchema = new mongoose.Schema(
       type: String,
     },
     tags: [String],
+    fileUrl: {
+      type: String,
+    }
   },
   { timestamps: true }
 );

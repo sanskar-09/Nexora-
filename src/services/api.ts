@@ -66,7 +66,12 @@ export const medicationService = {
 
 export const healthDataService = {
   addHealthData: async (data: any) => {
-    return await axios.post(`${API_URL}/health-data`, data);
+    const config = {
+      headers: {
+        'Content-Type': data instanceof FormData ? 'multipart/form-data' : 'application/json',
+      },
+    };
+    return await axios.post(`${API_URL}/health-data`, data, config);
   },
 
   getHealthData: async () => {
