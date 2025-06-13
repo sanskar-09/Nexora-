@@ -1,4 +1,3 @@
-
 import { useState } from 'react';
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
@@ -23,10 +22,46 @@ import {
 } from "lucide-react";
 import AppointmentScheduler from './AppointmentScheduler';
 import UploadRecords from './UploadRecords';
+import { toast } from "@/components/ui/use-toast";
+
+interface MedicalRecord {
+  id: number;
+  title: string;
+  type: string;
+  provider: string;
+  date: string;
+  status: string;
+}
 
 const Telemedicine = () => {
   const [activeTab, setActiveTab] = useState('consultations');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([
+    {
+      id: 1,
+      title: "Complete Blood Count (CBC)",
+      type: "Lab Result",
+      provider: "Central Medical Lab",
+      date: "2024-01-15",
+      status: "completed"
+    },
+    {
+      id: 2,
+      title: "Chest X-Ray",
+      type: "Imaging",
+      provider: "City Hospital",
+      date: "2024-01-10",
+      status: "completed"
+    },
+    {
+      id: 3,
+      title: "Annual Physical Exam",
+      type: "Visit Summary",
+      provider: "Dr. Smith's Clinic",
+      date: "2024-01-05",
+      status: "completed"
+    }
+  ]);
 
   console.log('Telemedicine component rendering');
 
@@ -81,39 +116,44 @@ const Telemedicine = () => {
     }
   ];
 
-  const medicalRecords = [
-    {
-      id: 1,
-      title: "Complete Blood Count (CBC)",
-      type: "Lab Result",
-      provider: "Central Medical Lab",
-      date: "2024-01-15",
-      status: "completed"
-    },
-    {
-      id: 2,
-      title: "Chest X-Ray",
-      type: "Imaging",
-      provider: "City Hospital",
-      date: "2024-01-10",
-      status: "completed"
-    },
-    {
-      id: 3,
-      title: "Annual Physical Exam",
-      type: "Visit Summary",
-      provider: "Dr. Smith's Clinic",
-      date: "2024-01-05",
-      status: "completed"
-    }
-  ];
-
   const handleUploadRecord = async (file: File, metadata: any) => {
-    // Simulate upload
     console.log('Uploading record:', file.name, metadata);
-    // In a real app, you would upload to a server or cloud storage
-    await new Promise(resolve => setTimeout(resolve, 2000));
-    setShowUploadModal(false);
+    
+    try {
+      // Simulate upload process
+      await new Promise(resolve => setTimeout(resolve, 2000));
+      
+      // Create new medical record
+      const newRecord: MedicalRecord = {
+        id: Date.now(), // Simple ID generation
+        title: metadata.title,
+        type: metadata.type.split('_').map((word: string) => 
+          word.charAt(0).toUpperCase() + word.slice(1)
+        ).join(' '),
+        provider: metadata.provider,
+        date: metadata.date.toISOString().split('T')[0],
+        status: "completed"
+      };
+
+      // Add to medical records
+      setMedicalRecords(prev => [newRecord, ...prev]);
+      
+      // Close modal and show success toast
+      setShowUploadModal(false);
+      
+      toast({
+        title: "Document uploaded successfully",
+        description: `${file.name} has been added to your medical records.`,
+      });
+      
+    } catch (error) {
+      console.error('Upload error:', error);
+      toast({
+        title: "Upload failed",
+        description: "There was an error uploading your document. Please try again.",
+        variant: "destructive"
+      });
+    }
   };
 
   return (
