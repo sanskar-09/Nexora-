@@ -14,6 +14,7 @@
     "start:server": "node dist-server/index.js"
   },
   "dependencies": {
+    "@firebasegen/default-connector": "file:dataconnect-generated/js/default-connector",
     "@hookform/resolvers": "^3.9.0",
     "@radix-ui/react-accordion": "^1.2.0",
     "@radix-ui/react-alert-dialog": "^1.1.1",
