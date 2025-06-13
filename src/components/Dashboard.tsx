@@ -1,4 +1,8 @@
+
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
+import { Badge } from "@/components/ui/badge";
+import { Button } from "@/components/ui/button";
+import { Progress } from "@/components/ui/progress";
 import { Activity, Calendar, FileText, Heart, Users, AlertCircle } from "lucide-react";
 
 interface DashboardProps {

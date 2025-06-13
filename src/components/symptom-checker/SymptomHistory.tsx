@@ -29,7 +29,7 @@ export const SymptomHistory: React.FC<SymptomHistoryProps> = ({ history, onSelec
       case 'medium':
         return 'default';
       case 'low':
-        return 'secondary';
+        return 'default';
       default:
         return 'default';
     }
