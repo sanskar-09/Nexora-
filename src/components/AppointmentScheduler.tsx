@@ -44,7 +44,7 @@ const AppointmentScheduler = () => {
   const [appointments, setAppointments] = useState<Appointment[]>([
     {
       id: 1,
-      doctorName: "Dr. Sarah Johnson",
+      doctorName: "Dr. Priya Sharma",
       specialty: "Cardiology",
       date: parseISO("2024-01-15"),
       time: "10:00 AM",
@@ -54,7 +54,7 @@ const AppointmentScheduler = () => {
     },
     {
       id: 2,
-      doctorName: "Dr. Michael Chen",
+      doctorName: "Dr. Rajesh Patel",
       specialty: "General Medicine",
       date: parseISO("2024-01-20"),
       time: "2:30 PM",
@@ -64,7 +64,7 @@ const AppointmentScheduler = () => {
     },
     {
       id: 3,
-      doctorName: "Dr. Emily Rodriguez",
+      doctorName: "Dr. Ananya Gupta",
       specialty: "Dermatology",
       date: addDays(new Date(), 5),
       time: "11:15 AM",
@@ -75,14 +75,14 @@ const AppointmentScheduler = () => {
   ]);
 
   const availableDoctors = [
-    { id: 1, name: "Dr. Sarah Johnson", specialty: "Cardiology", availableDays: [1, 3, 5] },
-    { id: 2, name: "Dr. Michael Chen", specialty: "General Medicine", availableDays: [0, 2, 4] },
-    { id: 3, name: "Dr. Emily Rodriguez", specialty: "Dermatology", availableDays: [1, 2, 4] },
-    { id: 4, name: "Dr. James Wilson", specialty: "Orthopedics", availableDays: [0, 3, 5] },
-    { id: 5, name: "Dr. Lisa Thompson", specialty: "Endocrinology", availableDays: [2, 4, 5] },
-    { id: 6, name: "Dr. Robert Garcia", specialty: "Neurology", availableDays: [1, 3, 5] },
-    { id: 7, name: "Dr. Jennifer Lee", specialty: "Psychiatry", availableDays: [0, 2, 4] },
-    { id: 8, name: "Dr. David Kim", specialty: "Pulmonology", availableDays: [1, 3, 5] }
+    { id: 1, name: "Dr. Priya Sharma", specialty: "Cardiology", availableDays: [1, 3, 5] },
+    { id: 2, name: "Dr. Rajesh Patel", specialty: "General Medicine", availableDays: [0, 2, 4] },
+    { id: 3, name: "Dr. Ananya Gupta", specialty: "Dermatology", availableDays: [1, 2, 4] },
+    { id: 4, name: "Dr. Vikram Singh", specialty: "Orthopedics", availableDays: [0, 3, 5] },
+    { id: 5, name: "Dr. Meera Kapoor", specialty: "Endocrinology", availableDays: [2, 4, 5] },
+    { id: 6, name: "Dr. Arun Kumar", specialty: "Neurology", availableDays: [1, 3, 5] },
+    { id: 7, name: "Dr. Neha Reddy", specialty: "Psychiatry", availableDays: [0, 2, 4] },
+    { id: 8, name: "Dr. Sanjay Verma", specialty: "Pulmonology", availableDays: [1, 3, 5] }
   ];
 
   const timeSlots = [

@@ -1,22 +1,24 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { Progress } from "@/components/ui/progress";
 import { Activity, Calendar, FileText, Heart, Users, AlertCircle } from "lucide-react";
+import { useNavigate } from 'react-router-dom';
+import { toast } from "@/components/ui/use-toast";
 
 interface DashboardProps {
   userRole: 'patient' | 'doctor' | 'admin' | 'guest';
 }
 
 const Dashboard = ({ userRole }: DashboardProps) => {
+  const navigate = useNavigate();
   const healthScore = 85;
   const upcomingAppointments = [
-    { id: 1, doctor: "Dr. Sarah Johnson", specialty: "Cardiology", date: "2024-01-15", time: "10:00 AM" },
-    { id: 2, doctor: "Dr. Michael Chen", specialty: "General Medicine", date: "2024-01-20", time: "2:30 PM" },
-    { id: 3, doctor: "Dr. Emily Rodriguez", specialty: "Dermatology", date: "2024-01-22", time: "11:15 AM" },
-    { id: 4, doctor: "Dr. James Wilson", specialty: "Orthopedics", date: "2024-01-25", time: "3:45 PM" },
-    { id: 5, doctor: "Dr. Lisa Thompson", specialty: "Endocrinology", date: "2024-02-02", time: "9:30 AM" }
+    { id: 1, doctor: "Dr. Priya Sharma", specialty: "Cardiology", date: "2024-01-15", time: "10:00 AM" },
+    { id: 2, doctor: "Dr. Rajesh Patel", specialty: "General Medicine", date: "2024-01-20", time: "2:30 PM" },
+    { id: 3, doctor: "Dr. Ananya Gupta", specialty: "Dermatology", date: "2024-01-22", time: "11:15 AM" },
+    { id: 4, doctor: "Dr. Vikram Singh", specialty: "Orthopedics", date: "2024-01-25", time: "3:45 PM" },
+    { id: 5, doctor: "Dr. Meera Kapoor", specialty: "Endocrinology", date: "2024-02-02", time: "9:30 AM" }
   ];
 
   const recentMedications = [
@@ -54,6 +56,37 @@ const Dashboard = ({ userRole }: DashboardProps) => {
         return "Welcome! Explore our health platform features.";
       default:
         return "Welcome to your health dashboard!";
+    }
+  };
+
+  const handleViewAllAppointments = () => {
+    navigate('/appointments');
+  };
+
+  const handleManageMedications = () => {
+    navigate('/medications');
+  };
+
+  const handleViewDetails = (appointmentId: number) => {
+    navigate(`/appointments/${appointmentId}`);
+  };
+
+  const handleQuickAction = (action: string) => {
+    switch (action) {
+      case 'check-symptoms':
+        navigate('/submit-symptoms');
+        break;
+      case 'add-medication':
+        navigate('/medications/add');
+        break;
+      case 'log-vitals':
+        navigate('/vitals/log');
+        break;
+      case 'book-appointment':
+        navigate('/appointments/new');
+        break;
+      default:
+        break;
     }
   };
 
@@ -106,7 +139,11 @@ const Dashboard = ({ userRole }: DashboardProps) => {
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
             {healthMetrics.map((metric, index) => (
-              <div key={index} className="p-3 bg-gray-50 rounded-lg">
+              <div 
+                key={index} 
+                className="p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100 transition-colors"
+                onClick={() => navigate(`/vitals/${metric.label.toLowerCase().replace(/\s+/g, '-')}`)}
+              >
                 <div className="flex items-center justify-between mb-1">
                   <p className="text-sm text-gray-600">{metric.label}</p>
                   <span className={`text-xs px-2 py-1 rounded-full ${
@@ -149,10 +186,22 @@ const Dashboard = ({ userRole }: DashboardProps) => {
                   <p className="text-sm text-gray-600">{appointment.specialty}</p>
                   <p className="text-sm text-blue-600">{appointment.date} at {appointment.time}</p>
                 </div>
-                <Button variant="outline" size="sm">View Details</Button>
+                <Button 
+                  variant="outline" 
+                  size="sm"
+                  onClick={() => handleViewDetails(appointment.id)}
+                >
+                  View Details
+                </Button>
               </div>
             ))}
-            <Button className="w-full mt-4" variant="outline">View All Appointments</Button>
+            <Button 
+              className="w-full mt-4" 
+              variant="outline"
+              onClick={handleViewAllAppointments}
+            >
+              View All Appointments
+            </Button>
           </CardContent>
         </Card>
 
@@ -164,7 +213,11 @@ const Dashboard = ({ userRole }: DashboardProps) => {
           </CardHeader>
           <CardContent className="space-y-4">
             {recentMedications.slice(0, 3).map((med) => (
-              <div key={med.id} className="flex items-center justify-between p-3 bg-gray-50 rounded-lg">
+              <div 
+                key={med.id} 
+                className="flex items-center justify-between p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+                onClick={() => navigate(`/medications/${med.id}`)}
+              >
                 <div>
                   <p className="font-medium">{med.name}</p>
                   <p className="text-sm text-gray-600">{med.dosage}</p>
@@ -183,7 +236,13 @@ const Dashboard = ({ userRole }: DashboardProps) => {
                 </Badge>
               </div>
             ))}
-            <Button className="w-full mt-4" variant="outline">Manage Medications</Button>
+            <Button 
+              className="w-full mt-4" 
+              variant="outline"
+              onClick={handleManageMedications}
+            >
+              Manage Medications
+            </Button>
           </CardContent>
         </Card>
       </div>
@@ -197,7 +256,11 @@ const Dashboard = ({ userRole }: DashboardProps) => {
         <CardContent>
           <div className="space-y-3">
             {recentActivities.map((activity) => (
-              <div key={activity.id} className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg">
+              <div 
+                key={activity.id} 
+                className="flex items-center space-x-3 p-3 bg-gray-50 rounded-lg cursor-pointer hover:bg-gray-100"
+                onClick={() => navigate(`/activity/${activity.id}`)}
+              >
                 <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
                   activity.type === 'medication' ? 'bg-blue-100' :
                   activity.type === 'vitals' ? 'bg-green-100' :
@@ -236,25 +299,41 @@ const Dashboard = ({ userRole }: DashboardProps) => {
         </CardHeader>
         <CardContent>
           <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-            <Button variant="outline" className="h-16 flex-col space-y-2">
+            <Button 
+              variant="outline" 
+              className="h-16 flex-col space-y-2"
+              onClick={() => handleQuickAction('check-symptoms')}
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
               <span className="text-sm">Check Symptoms</span>
             </Button>
-            <Button variant="outline" className="h-16 flex-col space-y-2">
+            <Button 
+              variant="outline" 
+              className="h-16 flex-col space-y-2"
+              onClick={() => handleQuickAction('add-medication')}
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19.428 15.428a2 2 0 00-1.022-.547l-2.387-.477a6 6 0 00-3.86.517l-.318.158a6 6 0 01-3.86.517L6.05 15.21a2 2 0 00-1.806.547M8 4h8l-1 1v5.172a2 2 0 00.586 1.414l5 5c1.26 1.26.367 3.414-1.415 3.414H4.828c-1.782 0-2.674-2.154-1.414-3.414l5-5A2 2 0 009 10.172V5L8 4z" />
               </svg>
               <span className="text-sm">Add Medication</span>
             </Button>
-            <Button variant="outline" className="h-16 flex-col space-y-2">
+            <Button 
+              variant="outline" 
+              className="h-16 flex-col space-y-2"
+              onClick={() => handleQuickAction('log-vitals')}
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
               </svg>
               <span className="text-sm">Log Vitals</span>
             </Button>
-            <Button variant="outline" className="h-16 flex-col space-y-2">
+            <Button 
+              variant="outline" 
+              className="h-16 flex-col space-y-2"
+              onClick={() => handleQuickAction('book-appointment')}
+            >
               <svg className="w-6 h-6" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M8 7V3m8 4V3m-9 8h10M5 21h14a2 2 0 002-2V7a2 2 0 00-2-2H5a2 2 0 00-2 2v12a2 2 0 002 2z" />
               </svg>

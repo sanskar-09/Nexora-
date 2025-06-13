@@ -10,6 +10,13 @@ import About from "./pages/About";
 import Login from "./components/Login";
 import Register from "./pages/Register";
 import ForgotPassword from "./pages/ForgotPassword";
+import SymptomsChecker from './pages/SymptomsChecker';
+import SubmitSymptoms from './pages/SubmitSymptoms';
+import Appointments from './pages/Appointments';
+import AddMedication from './pages/AddMedication';
+import LogVitals from './pages/LogVitals';
+import NewAppointment from './pages/NewAppointment';
+import QuickActionsHistory from './pages/QuickActionsHistory';
 
 const queryClient = new QueryClient();
 
@@ -31,6 +38,13 @@ const AppContent = () => {
           <Route path="/register" element={<Register />} />
           <Route path="/forgot-password" element={<ForgotPassword />} />
           <Route path="/about" element={<About />} />
+          <Route path="/symptoms-checker" element={<SymptomsChecker />} />
+          <Route path="/submit-symptoms" element={<SubmitSymptoms />} />
+          <Route path="/appointments" element={<Appointments />} />
+          <Route path="/appointments/new" element={<NewAppointment />} />
+          <Route path="/medications/add" element={<AddMedication />} />
+          <Route path="/vitals/log" element={<LogVitals />} />
+          <Route path="/quick-actions/history" element={<QuickActionsHistory />} />
           <Route path="*" element={<NotFound />} />
         </Routes>
       </TooltipProvider>

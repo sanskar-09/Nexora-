@@ -1,4 +1,4 @@
-import { useState, useEffect } from 'react';
+import React, { useState, useEffect } from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -9,6 +9,9 @@ import { format, parseISO } from 'date-fns';
 import { toast } from "@/components/ui/use-toast";
 import UploadRecords from './UploadRecords';
 import { healthDataService } from '@/services/api';
+import { medicalRecordService } from '@/services/medicalRecordService';
+import { Input } from "@/components/ui/input";
+import { Upload, File, Trash2, Download } from "lucide-react";
 
 interface RecordMetadata {
   type: 'lab_result' | 'imaging' | 'visit_summary' | 'vaccination' | 'prescription';
@@ -18,14 +21,12 @@ interface RecordMetadata {
 }
 
 interface MedicalRecord {
-  id: number;
-  type: 'lab_result' | 'imaging' | 'visit_summary' | 'vaccination' | 'prescription';
-  title: string;
-  date: Date;
-  provider: string;
-  status: 'normal' | 'abnormal' | 'critical' | 'completed';
-  details: string;
-  attachmentUrl?: string;
+  id: string;
+  fileName: string;
+  fileType: string;
+  fileSize: number;
+  uploadDate: string;
+  url: string;
 }
 
 interface HealthMetric {
@@ -44,56 +45,87 @@ interface MedicalRecordState {
   records: MedicalRecord[];
 }
 
-const MedicalRecords = () => {
-  const [state, setState] = useState<MedicalRecordState>({
-    isLoading: true,
-    error: null,
-    records: []
-  });
+interface MedicalRecordsProps {
+  appointmentId: string;
+}
 
-  const { isLoading, error, records } = state;
+export function MedicalRecords({ appointmentId }: MedicalRecordsProps) {
+  const [records, setRecords] = useState<MedicalRecord[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
+  const [selectedFile, setSelectedFile] = useState<File | null>(null);
+
+  const fetchRecords = async () => {
+    try {
+      const data = await medicalRecordService.getRecords(appointmentId);
+      setRecords(data);
+    } catch (error) {
+      console.error('Error fetching records:', error);
+      toast.error('Failed to fetch medical records');
+    }
+  };
 
   useEffect(() => {
-    const fetchRecords = async () => {
-      try {
-        setState({ ...state, isLoading: true, error: null });
-        const response = await healthDataService.getHealthData();
-        
-        // Validate response structure
-        if (!response?.data) {
-          throw new Error('Invalid response from server');
-        }
-
-        const fetchedRecords = response.data
-          .filter((item: any) => item.type === 'medical_record')
-          .map((item: any) => ({
-            id: item._id,
-            type: item.value?.type || 'unknown',
-            title: item.value?.title || 'Untitled',
-            date: new Date(item.date || new Date()),
-            provider: item.value?.provider || 'Unknown Provider',
-            status: item.value?.status || 'completed',
-            details: item.notes || '',
-            attachmentUrl: item.fileUrl || undefined
-          }));
-
-        setState({ ...state, records: fetchedRecords });
-      } catch (error) {
-        console.error("Error fetching medical records:", error);
-        const errorMessage = error instanceof Error ? error.message : 'Failed to load medical records';
-        setState({ ...state, error: errorMessage });
-        toast({
-          title: "Error",
-          description: errorMessage,
-          variant: "destructive",
-        });
-      } finally {
-        setState({ ...state, isLoading: false });
-      }
-    };
-
     fetchRecords();
-  }, []);
+  }, [appointmentId]);
+
+  const handleFileSelect = (event: React.ChangeEvent<HTMLInputElement>) => {
+    const file = event.target.files?.[0];
+    if (file) {
+      setSelectedFile(file);
+    }
+  };
+
+  const handleUpload = async () => {
+    if (!selectedFile) {
+      toast.error('Please select a file first');
+      return;
+    }
+
+    setIsLoading(true);
+    try {
+      await medicalRecordService.uploadRecord(appointmentId, selectedFile);
+      toast.success('File uploaded successfully');
+      setSelectedFile(null);
+      fetchRecords();
+    } catch (error) {
+      console.error('Error uploading file:', error);
+      toast.error('Failed to upload file');
+    } finally {
+      setIsLoading(false);
+    }
+  };
+
+  const handleDelete = async (recordId: string) => {
+    try {
+      await medicalRecordService.deleteRecord(appointmentId, recordId);
+      toast.success('File deleted successfully');
+      fetchRecords();
+    } catch (error) {
+      console.error('Error deleting file:', error);
+      toast.error('Failed to delete file');
+    }
+  };
+
+  const handleDownload = async (record: MedicalRecord) => {
+    try {
+      const response = await fetch(record.url);
+      if (!response.ok) throw new Error('Download failed');
+      
+      const blob = await response.blob();
+      const url = window.URL.createObjectURL(blob);
+      const a = document.createElement('a');
+      a.href = url;
+      a.download = record.fileName; // Use original filename
+      document.body.appendChild(a);
+      a.click();
+      window.URL.revokeObjectURL(url);
+      document.body.removeChild(a);
+      toast.success('File downloaded successfully');
+    } catch (error) {
+      console.error('Error downloading file:', error);
+      toast.error('Failed to download file');
+    }
+  };
 
   const [healthMetrics, setHealthMetrics] = useState<HealthMetric[]>([
     {
@@ -208,69 +240,9 @@ const MedicalRecords = () => {
     setSelectedRecord(record);
   };
 
-  const handleFileUpload = async (file: File, metadata: RecordMetadata) => {
-    try {
-      // Validate file
-      if (!file) throw new Error('No file selected');
-      if (file.size > 10 * 1024 * 1024) throw new Error('File size exceeds 10MB limit');
-      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
-      if (!allowedTypes.includes(file.type)) throw new Error('Invalid file type');
-
-      // Create FormData to send file
-      const formData = new FormData();
-      formData.append('file', file);
-      formData.append('metadata', JSON.stringify(metadata));
-
-      // Upload file and get URL
-      const response = await healthDataService.addHealthData(formData);
-      
-      if (!response?.data?.fileUrl) {
-        throw new Error('Failed to get file URL from server');
-      }
-
-      const newRecord: MedicalRecord = {
-        id: Date.now(), // Using timestamp to ensure uniqueness
-        type: metadata.type,
-        title: metadata.title,
-        date: metadata.date,
-        provider: metadata.provider,
-        status: 'normal',
-        details: `Uploaded via app. File: ${file.name}`,
-        attachmentUrl: response.data.fileUrl
-      };
-
-        setState(prev => ({
-          ...prev,
-          records: [...prev.records, newRecord]
-        }));
-        toast({
-          title: "File Uploaded",
-          description: `${file.name} has been successfully uploaded as a ${metadata.type} record.`,
-        });
-      } catch (error) {
-        console.error("Error uploading file:", error);
-        toast({
-          title: "Upload Failed",
-          description: "There was an error uploading your file. Please try again.",
-          variant: "destructive",
-        });
-      }
-  };
-
-  const handleDownload = (record: MedicalRecord) => {
-    if (record.attachmentUrl) {
-      const link = document.createElement('a');
-      link.href = record.attachmentUrl;
-      link.download = record.title.replace(/[^a-z0-9]/gi, '_').toLowerCase() + '.pdf';
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-    }
-  };
-
   const handleViewAttachment = (record: MedicalRecord) => {
-    if (record.attachmentUrl) {
-      window.open(record.attachmentUrl, '_blank');
+    if (record.url) {
+      window.open(record.url, '_blank');
     }
   };
 
@@ -281,20 +253,20 @@ const MedicalRecords = () => {
           <h1 className="text-3xl font-bold text-gray-900">Medical Records</h1>
           <p className="text-gray-600 mt-1">View and manage your health records and test results</p>
         </div>
-        <Dialog>
-          <DialogTrigger asChild>
-            <Button>Upload New Record</Button>
-          </DialogTrigger>
-          <DialogContent className="sm:max-w-[600px]">
-            <DialogHeader>
-              <DialogTitle>Upload Medical Record</DialogTitle>
-              <DialogDescription>
-                Upload your medical documents and records. Supported formats: PDF, JPEG, PNG
-              </DialogDescription>
-            </DialogHeader>
-            <UploadRecords onUpload={handleFileUpload} />
-          </DialogContent>
-        </Dialog>
+        <div className="flex gap-2">
+          <Input
+            type="file"
+            onChange={handleFileSelect}
+            className="flex-1"
+          />
+          <Button 
+            onClick={handleUpload} 
+            disabled={!selectedFile || isLoading}
+          >
+            <Upload className="h-4 w-4 mr-2" />
+            Upload
+          </Button>
+        </div>
       </div>
 
       <Tabs defaultValue="records" className="w-full">
@@ -305,72 +277,42 @@ const MedicalRecords = () => {
         </TabsList>
 
         <TabsContent value="records" className="space-y-4">
-          <div className="grid grid-cols-1 gap-4">
-            {records
-              .sort((a, b) => b.date.getTime() - a.date.getTime())
-              .map(record => (
-                <Card key={record.id} className="overflow-hidden">
-                  <CardHeader className="pb-2">
-                    <div className="flex justify-between items-start">
-                      <div className="flex items-center space-x-2">
-                        <span className="text-xl">{getRecordTypeIcon(record.type)}</span>
-                        <div>
-                          <CardTitle>{record.title}</CardTitle>
-                          <CardDescription>{format(record.date, 'MMMM d, yyyy')} • {record.provider}</CardDescription>
-                        </div>
-                      </div>
-                      <Badge className={getStatusBadgeColor(record.status)}>
-                        {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                      </Badge>
-                    </div>
-                  </CardHeader>
-                  <CardContent>
-                    <p className="text-sm text-gray-600 line-clamp-2">{record.details}</p>
-                    <div className="flex justify-end mt-4">
-                      <Dialog>
-                        <DialogTrigger asChild>
-                          <Button variant="outline" size="sm" onClick={() => viewRecordDetails(record)}>
-                            View Details
-                          </Button>
-                        </DialogTrigger>
-                        <DialogContent className="sm:max-w-md">
-                          <DialogHeader>
-                            <DialogTitle>{record.title}</DialogTitle>
-                            <DialogDescription>
-                              {format(record.date, 'MMMM d, yyyy')} • {record.provider}
-                            </DialogDescription>
-                          </DialogHeader>
-                          <div className="space-y-4 py-4">
-                            <div className="flex justify-between items-center">
-                              <span className="font-medium">Status:</span>
-                              <Badge className={getStatusBadgeColor(record.status)}>
-                                {record.status.charAt(0).toUpperCase() + record.status.slice(1)}
-                              </Badge>
-                            </div>
-                            <div>
-                              <span className="font-medium">Details:</span>
-                              <p className="mt-1 text-gray-700">{record.details}</p>
-                            </div>
-                            {record.attachmentUrl && (
-                              <div>
-                                <span className="font-medium">Attachments:</span>
-                                <div className="mt-2 space-x-2">
-                                  <Button variant="outline" size="sm" onClick={() => handleViewAttachment(record)}>
-                                    View
-                                  </Button>
-                                  <Button variant="outline" size="sm" onClick={() => handleDownload(record)}>
-                                    Download
-                                  </Button>
-                                </div>
-                              </div>
-                            )}
-                          </div>
-                        </DialogContent>
-                      </Dialog>
-                    </div>
-                  </CardContent>
-                </Card>
-              ))}
+          <div className="space-y-2">
+            {records.map((record) => (
+              <div
+                key={record.id}
+                className="flex items-center justify-between p-2 bg-gray-50 rounded-lg"
+              >
+                <div className="flex items-center gap-2">
+                  <File className="h-4 w-4 text-gray-500" />
+                  <span className="text-sm">{record.fileName}</span>
+                  <span className="text-xs text-gray-500">
+                    ({Math.round(record.fileSize / 1024)} KB)
+                  </span>
+                </div>
+                <div className="flex gap-2">
+                  <Button
+                    variant="outline"
+                    size="icon"
+                    onClick={() => handleDownload(record)}
+                  >
+                    <Download className="h-4 w-4" />
+                  </Button>
+                  <Button
+                    variant="destructive"
+                    size="icon"
+                    onClick={() => handleDelete(record.id)}
+                  >
+                    <Trash2 className="h-4 w-4" />
+                  </Button>
+                </div>
+              </div>
+            ))}
+            {records.length === 0 && (
+              <div className="text-center text-gray-500 py-4">
+                No medical records uploaded yet
+              </div>
+            )}
           </div>
         </TabsContent>
 
@@ -485,6 +427,6 @@ const MedicalRecords = () => {
       </Tabs>
     </div>
   );
-};
+}
 
 export default MedicalRecords;

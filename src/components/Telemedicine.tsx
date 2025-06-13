@@ -24,6 +24,8 @@ import AppointmentScheduler from './AppointmentScheduler';
 import UploadRecords from './UploadRecords';
 import DocumentViewer from './DocumentViewer';
 import { toast } from "@/components/ui/use-toast";
+import VideoCall from './VideoCall';
+import Chat from './Chat';
 
 interface MedicalRecord {
   id: number;
@@ -35,11 +37,23 @@ interface MedicalRecord {
   attachmentUrl?: string;
 }
 
+interface Appointment {
+  id: string;
+  title: string;
+  date: string;
+  time: string;
+  status: 'upcoming' | 'in-progress' | 'completed';
+  doctor: string;
+  role: 'doctor' | 'patient';
+}
+
 const Telemedicine = () => {
   const [activeTab, setActiveTab] = useState('consultations');
   const [showUploadModal, setShowUploadModal] = useState(false);
   const [selectedDocument, setSelectedDocument] = useState<MedicalRecord | null>(null);
   const [showDocumentViewer, setShowDocumentViewer] = useState(false);
+  const [currentAppointment, setCurrentAppointment] = useState<Appointment | null>(null);
+  const [userRole, setUserRole] = useState<'doctor' | 'patient'>('patient'); // Default to patient
   
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([
     {
@@ -71,58 +85,29 @@ const Telemedicine = () => {
     }
   ]);
 
+  // Mock appointments data
+  const appointments: Appointment[] = [
+    {
+      id: '1',
+      title: 'General Checkup',
+      date: '2024-03-20',
+      time: '10:00',
+      status: 'upcoming',
+      doctor: 'Dr. Priya Sharma',
+      role: 'patient'
+    },
+    {
+      id: '2',
+      title: 'Follow-up Consultation',
+      date: '2024-03-21',
+      time: '14:30',
+      status: 'upcoming',
+      doctor: 'Dr. Rajesh Patel',
+      role: 'patient'
+    }
+  ];
+
   console.log('Telemedicine component rendering');
-
-  const upcomingAppointments = [
-    {
-      id: 1,
-      doctor: "Dr. Sarah Johnson",
-      specialty: "Cardiologist",
-      date: "2024-01-20",
-      time: "10:00 AM",
-      type: "Video Consultation",
-      status: "confirmed"
-    },
-    {
-      id: 2,
-      doctor: "Dr. Michael Chen",
-      specialty: "Dermatologist", 
-      date: "2024-01-22",
-      time: "2:30 PM",
-      type: "Phone Consultation",
-      status: "pending"
-    }
-  ];
-
-  const availableDoctors = [
-    {
-      id: 1,
-      name: "Dr. Emily Rodriguez",
-      specialty: "Internal Medicine",
-      rating: 4.9,
-      experience: "15+ years",
-      available: true,
-      price: "$120/session"
-    },
-    {
-      id: 2,
-      name: "Dr. James Wilson",
-      specialty: "Psychiatry",
-      rating: 4.8,
-      experience: "12+ years", 
-      available: true,
-      price: "$150/session"
-    },
-    {
-      id: 3,
-      name: "Dr. Lisa Thompson",
-      specialty: "Pediatrics",
-      rating: 4.9,
-      experience: "10+ years",
-      available: false,
-      price: "$100/session"
-    }
-  ];
 
   const handleUploadRecord = async (file: File, metadata: any) => {
     console.log('Uploading record:', file.name, metadata);
@@ -202,6 +187,28 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
     });
   };
 
+  const handleStartConsultation = (appointment: Appointment) => {
+    const appointmentDateTime = new Date(`${appointment.date}T${appointment.time}`);
+    const now = new Date();
+
+    if (appointmentDateTime > now) {
+      toast({
+        title: "Appointment not started",
+        description: "Please wait until the scheduled time.",
+        variant: "destructive"
+      });
+      return;
+    }
+
+    setCurrentAppointment(appointment);
+    setActiveTab('consultation');
+    
+    toast({
+      title: "Consultation started",
+      description: "Your telemedicine session has begun.",
+    });
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
@@ -238,7 +245,7 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
         <TabsContent value="consultations" className="space-y-6">
           {/* Quick Actions */}
           <div className="grid md:grid-cols-3 gap-4">
-            <Card className="hover:shadow-lg transition-shadow cursor-pointer">
+            <Card className="hover:shadow-lg transition-shadow cursor-pointer" onClick={() => setActiveTab('consultation')}>
               <CardContent className="p-6 text-center">
                 <div className="w-12 h-12 bg-blue-100 rounded-lg flex items-center justify-center mx-auto mb-4">
                   <Video className="w-6 h-6 text-blue-600" />
@@ -282,15 +289,15 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
             </CardHeader>
             <CardContent>
               <div className="space-y-4">
-                {upcomingAppointments.map((appointment) => (
+                {appointments.map((appointment) => (
                   <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-12 h-12 bg-blue-100 rounded-full flex items-center justify-center">
                         <User className="w-6 h-6 text-blue-600" />
                       </div>
                       <div>
-                        <h4 className="font-medium">{appointment.doctor}</h4>
-                        <p className="text-sm text-gray-600">{appointment.specialty}</p>
+                        <h4 className="font-medium">{appointment.title}</h4>
+                        <p className="text-sm text-gray-600">{appointment.doctor}</p>
                         <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
                           <span className="flex items-center space-x-1">
                             <Calendar className="w-4 h-4" />
@@ -304,12 +311,15 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
                       </div>
                     </div>
                     <div className="flex items-center space-x-3">
-                      <Badge variant={appointment.status === 'confirmed' ? 'default' : 'secondary'}>
+                      <Badge variant={appointment.status === 'upcoming' ? 'default' : 'secondary'}>
                         {appointment.status}
                       </Badge>
-                      <Button size="sm">
-                        <Video className="w-4 h-4 mr-2" />
-                        Join
+                      <Button 
+                        size="sm" 
+                        onClick={() => handleStartConsultation(appointment)}
+                        disabled={appointment.status === 'completed'}
+                      >
+                        {appointment.status === 'upcoming' ? 'Start Consultation' : 'Join Consultation'}
                       </Button>
                     </div>
                   </div>
@@ -398,35 +408,38 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
             </CardHeader>
             <CardContent>
               <div className="grid gap-4">
-                {availableDoctors.map((doctor) => (
-                  <div key={doctor.id} className="flex items-center justify-between p-4 border rounded-lg">
+                {appointments.map((appointment) => (
+                  <div key={appointment.id} className="flex items-center justify-between p-4 border rounded-lg">
                     <div className="flex items-center space-x-4">
                       <div className="w-16 h-16 bg-gray-100 rounded-full flex items-center justify-center">
                         <User className="w-8 h-8 text-gray-600" />
                       </div>
                       <div>
-                        <h4 className="font-semibold">{doctor.name}</h4>
-                        <p className="text-gray-600">{doctor.specialty}</p>
+                        <h4 className="font-semibold">{appointment.title}</h4>
+                        <p className="text-gray-600">{appointment.doctor}</p>
                         <div className="flex items-center space-x-4 text-sm text-gray-500 mt-1">
                           <span className="flex items-center space-x-1">
-                            <Star className="w-4 h-4 text-yellow-500" />
-                            <span>{doctor.rating}</span>
+                            <Calendar className="w-4 h-4" />
+                            <span>{appointment.date}</span>
                           </span>
-                          <span>{doctor.experience}</span>
-                          <span className="font-medium text-blue-600">{doctor.price}</span>
+                          <span className="flex items-center space-x-1">
+                            <Clock className="w-4 h-4" />
+                            <span>{appointment.time}</span>
+                          </span>
                         </div>
                       </div>
                     </div>
                     <div className="flex items-center space-x-2">
-                      <Badge variant={doctor.available ? 'default' : 'secondary'}>
-                        {doctor.available ? 'Available' : 'Busy'}
+                      <Badge variant={appointment.status === 'upcoming' ? 'default' : 'secondary'}>
+                        {appointment.status}
                       </Badge>
                       <Button 
                         size="sm" 
-                        disabled={!doctor.available}
+                        disabled={appointment.status === 'completed'}
                         className="ml-2"
+                        onClick={() => handleStartConsultation(appointment)}
                       >
-                        Book Consultation
+                        {appointment.status === 'upcoming' ? 'Start Consultation' : 'Join Consultation'}
                       </Button>
                     </div>
                   </div>
@@ -434,6 +447,33 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
               </div>
             </CardContent>
           </Card>
+        </TabsContent>
+
+        <TabsContent value="consultation">
+          {currentAppointment ? (
+            <div className="grid grid-cols-1 lg:grid-cols-2 gap-4">
+              <VideoCall 
+                appointmentId={currentAppointment.id} 
+                role={userRole}
+              />
+              <Chat 
+                appointmentId={currentAppointment.id}
+                role={userRole}
+              />
+            </div>
+          ) : (
+            <Card>
+              <CardContent className="text-center py-8">
+                <p>No active consultation</p>
+                <Button
+                  className="mt-4"
+                  onClick={() => setActiveTab('consultations')}
+                >
+                  View Consultations
+                </Button>
+              </CardContent>
+            </Card>
+          )}
         </TabsContent>
       </Tabs>
 

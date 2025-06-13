@@ -168,8 +168,8 @@ Nexora is a comprehensive healthcare platform built with React and Vite, offerin
 
 3. Start the development server
    ```bash
-   npm run dev
-   ```
+npm run dev
+```
 
 ## Contributing
 Please read our contributing guidelines before submitting pull requests.
