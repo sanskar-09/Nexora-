@@ -1,11 +1,8 @@
-
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
-import { Badge } from "@/components/ui/badge";
-import { Button } from "@/components/ui/button";
-import { Progress } from "@/components/ui/progress";
+import { Activity, Calendar, FileText, Heart, Users, AlertCircle } from "lucide-react";
 
 interface DashboardProps {
-  userRole: 'patient' | 'doctor' | 'admin';
+  userRole: 'patient' | 'doctor' | 'admin' | 'guest';
 }
 
 const Dashboard = ({ userRole }: DashboardProps) => {
@@ -43,11 +40,24 @@ const Dashboard = ({ userRole }: DashboardProps) => {
     { id: 5, type: "medication", description: "Refilled Metformin prescription", time: "2 days ago" }
   ];
 
+  const getWelcomeMessage = () => {
+    switch (userRole) {
+      case 'doctor':
+        return "Welcome back, Doctor! Here's your practice overview.";
+      case 'admin':
+        return "Welcome to the admin dashboard. System overview below.";
+      case 'guest':
+        return "Welcome! Explore our health platform features.";
+      default:
+        return "Welcome to your health dashboard!";
+    }
+  };
+
   return (
     <div className="space-y-6">
       <div className="flex items-center justify-between">
         <div>
-          <h1 className="text-3xl font-bold text-gray-900">Welcome back, John!</h1>
+          <h1 className="text-3xl font-bold text-gray-900">{getWelcomeMessage()}</h1>
           <p className="text-gray-600 mt-1">Here's your health overview for today</p>
         </div>
         <Badge className="bg-green-100 text-green-800 text-sm px-3 py-1">
