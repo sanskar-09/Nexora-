@@ -22,6 +22,7 @@ import {
 } from "lucide-react";
 import AppointmentScheduler from './AppointmentScheduler';
 import UploadRecords from './UploadRecords';
+import DocumentViewer from './DocumentViewer';
 import { toast } from "@/components/ui/use-toast";
 
 interface MedicalRecord {
@@ -37,6 +38,9 @@ interface MedicalRecord {
 const Telemedicine = () => {
   const [activeTab, setActiveTab] = useState('consultations');
   const [showUploadModal, setShowUploadModal] = useState(false);
+  const [selectedDocument, setSelectedDocument] = useState<MedicalRecord | null>(null);
+  const [showDocumentViewer, setShowDocumentViewer] = useState(false);
+  
   const [medicalRecords, setMedicalRecords] = useState<MedicalRecord[]>([
     {
       id: 1,
@@ -162,39 +166,40 @@ const Telemedicine = () => {
   };
 
   const handleViewRecord = (record: MedicalRecord) => {
-    if (record.attachmentUrl) {
-      // Open in new tab
-      window.open(record.attachmentUrl, '_blank');
-    } else {
-      toast({
-        title: "No attachment available",
-        description: "This record doesn't have an attached file.",
-        variant: "destructive"
-      });
-    }
+    setSelectedDocument(record);
+    setShowDocumentViewer(true);
   };
 
   const handleDownloadRecord = (record: MedicalRecord) => {
-    if (record.attachmentUrl) {
-      // Create a temporary link element and trigger download
-      const link = document.createElement('a');
-      link.href = record.attachmentUrl;
-      link.download = `${record.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      
-      toast({
-        title: "Download started",
-        description: `Downloading ${record.title}...`,
-      });
-    } else {
-      toast({
-        title: "No file to download",
-        description: "This record doesn't have an attached file.",
-        variant: "destructive"
-      });
-    }
+    // Create a blob with sample content for demonstration
+    const sampleContent = `Medical Record: ${record.title}
+Provider: ${record.provider}
+Date: ${record.date}
+Type: ${record.type}
+Status: ${record.status}
+
+This is a sample medical document. In a real application, this would contain the actual medical data and reports.
+
+Patient Information:
+- Document ID: ${record.id}
+- Generated: ${new Date().toISOString()}
+
+Note: This is a demonstration document created for the Nexora Healthcare platform.`;
+
+    const blob = new Blob([sampleContent], { type: 'text/plain' });
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = `${record.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+    document.body.appendChild(link);
+    link.click();
+    document.body.removeChild(link);
+    window.URL.revokeObjectURL(url);
+    
+    toast({
+      title: "Download completed",
+      description: `${record.title} has been downloaded successfully.`,
+    });
   };
 
   return (
@@ -431,6 +436,18 @@ const Telemedicine = () => {
           </Card>
         </TabsContent>
       </Tabs>
+
+      {/* Document Viewer */}
+      {selectedDocument && (
+        <DocumentViewer
+          isOpen={showDocumentViewer}
+          onClose={() => {
+            setShowDocumentViewer(false);
+            setSelectedDocument(null);
+          }}
+          document={selectedDocument}
+        />
+      )}
     </div>
   );
 };
