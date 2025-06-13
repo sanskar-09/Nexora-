@@ -31,6 +31,7 @@ interface MedicalRecord {
   provider: string;
   date: string;
   status: string;
+  attachmentUrl?: string;
 }
 
 const Telemedicine = () => {
@@ -43,7 +44,8 @@ const Telemedicine = () => {
       type: "Lab Result",
       provider: "Central Medical Lab",
       date: "2024-01-15",
-      status: "completed"
+      status: "completed",
+      attachmentUrl: "/uploads/sample-cbc-report.pdf"
     },
     {
       id: 2,
@@ -51,7 +53,8 @@ const Telemedicine = () => {
       type: "Imaging",
       provider: "City Hospital",
       date: "2024-01-10",
-      status: "completed"
+      status: "completed",
+      attachmentUrl: "/uploads/sample-xray.pdf"
     },
     {
       id: 3,
@@ -59,7 +62,8 @@ const Telemedicine = () => {
       type: "Visit Summary",
       provider: "Dr. Smith's Clinic",
       date: "2024-01-05",
-      status: "completed"
+      status: "completed",
+      attachmentUrl: "/uploads/sample-physical-exam.pdf"
     }
   ]);
 
@@ -132,7 +136,8 @@ const Telemedicine = () => {
         ).join(' '),
         provider: metadata.provider,
         date: metadata.date.toISOString().split('T')[0],
-        status: "completed"
+        status: "completed",
+        attachmentUrl: `/uploads/${file.name}` // Add attachment URL for uploaded files
       };
 
       // Add to medical records
@@ -151,6 +156,42 @@ const Telemedicine = () => {
       toast({
         title: "Upload failed",
         description: "There was an error uploading your document. Please try again.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleViewRecord = (record: MedicalRecord) => {
+    if (record.attachmentUrl) {
+      // Open in new tab
+      window.open(record.attachmentUrl, '_blank');
+    } else {
+      toast({
+        title: "No attachment available",
+        description: "This record doesn't have an attached file.",
+        variant: "destructive"
+      });
+    }
+  };
+
+  const handleDownloadRecord = (record: MedicalRecord) => {
+    if (record.attachmentUrl) {
+      // Create a temporary link element and trigger download
+      const link = document.createElement('a');
+      link.href = record.attachmentUrl;
+      link.download = `${record.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.pdf`;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      
+      toast({
+        title: "Download started",
+        description: `Downloading ${record.title}...`,
+      });
+    } else {
+      toast({
+        title: "No file to download",
+        description: "This record doesn't have an attached file.",
         variant: "destructive"
       });
     }
@@ -311,11 +352,11 @@ const Telemedicine = () => {
                     </div>
                     <div className="flex items-center space-x-2">
                       <Badge variant="outline">{record.status}</Badge>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleViewRecord(record)}>
                         <Eye className="w-4 h-4 mr-2" />
                         View
                       </Button>
-                      <Button size="sm" variant="outline">
+                      <Button size="sm" variant="outline" onClick={() => handleDownloadRecord(record)}>
                         <Download className="w-4 h-4 mr-2" />
                         Download
                       </Button>
