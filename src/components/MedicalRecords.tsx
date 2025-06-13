@@ -38,34 +38,57 @@ interface HealthMetric {
   status: 'normal' | 'abnormal' | 'critical';
 }
 
+interface MedicalRecordState {
+  isLoading: boolean;
+  error: string | null;
+  records: MedicalRecord[];
+}
+
 const MedicalRecords = () => {
-  const [records, setRecords] = useState<MedicalRecord[]>([]);
+  const [state, setState] = useState<MedicalRecordState>({
+    isLoading: true,
+    error: null,
+    records: []
+  });
+
+  const { isLoading, error, records } = state;
 
   useEffect(() => {
     const fetchRecords = async () => {
       try {
+        setState({ ...state, isLoading: true, error: null });
         const response = await healthDataService.getHealthData();
-        const fetchedRecords: MedicalRecord[] = response.data
+        
+        // Validate response structure
+        if (!response?.data) {
+          throw new Error('Invalid response from server');
+        }
+
+        const fetchedRecords = response.data
           .filter((item: any) => item.type === 'medical_record')
           .map((item: any) => ({
             id: item._id,
-            type: item.value.type,
-            title: item.value.title,
-            date: new Date(item.date),
-            provider: item.value.provider,
-            status: item.value.status || 'completed',
-            details: item.notes,
-            attachmentUrl: item.fileUrl
+            type: item.value?.type || 'unknown',
+            title: item.value?.title || 'Untitled',
+            date: new Date(item.date || new Date()),
+            provider: item.value?.provider || 'Unknown Provider',
+            status: item.value?.status || 'completed',
+            details: item.notes || '',
+            attachmentUrl: item.fileUrl || undefined
           }));
-        console.log("Fetched Medical Records:", fetchedRecords);
-        setRecords(fetchedRecords);
+
+        setState({ ...state, records: fetchedRecords });
       } catch (error) {
         console.error("Error fetching medical records:", error);
+        const errorMessage = error instanceof Error ? error.message : 'Failed to load medical records';
+        setState({ ...state, error: errorMessage });
         toast({
           title: "Error",
-          description: "Failed to load medical records. Please try again.",
+          description: errorMessage,
           variant: "destructive",
         });
+      } finally {
+        setState({ ...state, isLoading: false });
       }
     };
 
@@ -187,6 +210,12 @@ const MedicalRecords = () => {
 
   const handleFileUpload = async (file: File, metadata: RecordMetadata) => {
     try {
+      // Validate file
+      if (!file) throw new Error('No file selected');
+      if (file.size > 10 * 1024 * 1024) throw new Error('File size exceeds 10MB limit');
+      const allowedTypes = ['application/pdf', 'image/jpeg', 'image/png'];
+      if (!allowedTypes.includes(file.type)) throw new Error('Invalid file type');
+
       // Create FormData to send file
       const formData = new FormData();
       formData.append('file', file);
@@ -194,20 +223,26 @@ const MedicalRecords = () => {
 
       // Upload file and get URL
       const response = await healthDataService.addHealthData(formData);
-      const fileUrl = response.data.fileUrl;
+      
+      if (!response?.data?.fileUrl) {
+        throw new Error('Failed to get file URL from server');
+      }
 
       const newRecord: MedicalRecord = {
-        id: records.length + 1,
+        id: Date.now(), // Using timestamp to ensure uniqueness
         type: metadata.type,
         title: metadata.title,
         date: metadata.date,
         provider: metadata.provider,
         status: 'normal',
         details: `Uploaded via app. File: ${file.name}`,
-        attachmentUrl: fileUrl
+        attachmentUrl: response.data.fileUrl
       };
 
-        setRecords(prev => [...prev, newRecord]);
+        setState(prev => ({
+          ...prev,
+          records: [...prev.records, newRecord]
+        }));
         toast({
           title: "File Uploaded",
           description: `${file.name} has been successfully uploaded as a ${metadata.type} record.`,
