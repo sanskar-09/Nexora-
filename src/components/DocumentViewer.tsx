@@ -20,7 +20,7 @@ interface DocumentViewerProps {
   };
 }
 
-const DocumentViewer = ({ isOpen, onClose, document }: DocumentViewerProps) => {
+const DocumentViewer = ({ isOpen, onClose, document: documentData }: DocumentViewerProps) => {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleDownload = () => {
@@ -29,16 +29,16 @@ const DocumentViewer = ({ isOpen, onClose, document }: DocumentViewerProps) => {
     // Simulate download process
     setTimeout(() => {
       // Create a blob with sample content for demonstration
-      const sampleContent = `Medical Record: ${document.title}
-Provider: ${document.provider}
-Date: ${document.date}
-Type: ${document.type}
-Status: ${document.status}
+      const sampleContent = `Medical Record: ${documentData.title}
+Provider: ${documentData.provider}
+Date: ${documentData.date}
+Type: ${documentData.type}
+Status: ${documentData.status}
 
 This is a sample medical document. In a real application, this would contain the actual medical data and reports.
 
 Patient Information:
-- Document ID: ${document.id}
+- Document ID: ${documentData.id}
 - Generated: ${new Date().toISOString()}
 
 Note: This is a demonstration document created for the Nexora Healthcare platform.`;
@@ -47,7 +47,7 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
       const url = window.URL.createObjectURL(blob);
       const link = document.createElement('a');
       link.href = url;
-      link.download = `${document.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
+      link.download = `${documentData.title.replace(/[^a-z0-9]/gi, '_').toLowerCase()}.txt`;
       document.body.appendChild(link);
       link.click();
       document.body.removeChild(link);
@@ -56,7 +56,7 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
       setIsLoading(false);
       toast({
         title: "Download completed",
-        description: `${document.title} has been downloaded successfully.`,
+        description: `${documentData.title} has been downloaded successfully.`,
       });
     }, 1000);
   };
@@ -72,7 +72,7 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
   };
 
   const renderDocumentPreview = () => {
-    if (document.type.toLowerCase().includes('imaging') || document.type.toLowerCase().includes('x-ray')) {
+    if (documentData.type.toLowerCase().includes('imaging') || documentData.type.toLowerCase().includes('x-ray')) {
       return (
         <div className="bg-gray-100 rounded-lg p-8 text-center">
           <Image className="w-24 h-24 mx-auto text-gray-400 mb-4" />
@@ -89,7 +89,7 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
           </div>
         </div>
       );
-    } else if (document.type.toLowerCase().includes('lab')) {
+    } else if (documentData.type.toLowerCase().includes('lab')) {
       return (
         <div className="bg-gray-50 rounded-lg p-6">
           <div className="bg-white rounded border p-6">
@@ -157,16 +157,16 @@ Note: This is a demonstration document created for the Nexora Healthcare platfor
         <DialogHeader>
           <div className="flex items-center justify-between">
             <div className="flex items-center space-x-3">
-              {getDocumentIcon(document.type)}
+              {getDocumentIcon(documentData.type)}
               <div>
-                <DialogTitle className="text-xl">{document.title}</DialogTitle>
+                <DialogTitle className="text-xl">{documentData.title}</DialogTitle>
                 <DialogDescription className="text-base">
-                  {document.type} • {document.provider} • {document.date}
+                  {documentData.type} • {documentData.provider} • {documentData.date}
                 </DialogDescription>
               </div>
             </div>
             <Badge variant="outline" className="ml-4">
-              {document.status}
+              {documentData.status}
             </Badge>
           </div>
         </DialogHeader>
