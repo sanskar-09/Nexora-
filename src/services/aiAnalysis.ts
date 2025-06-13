@@ -26,7 +26,12 @@ interface HealthMetrics {
 
 interface MLInsightData {
   userId: string;
-  symptomHistory: { date: string; symptoms: string[]; riskLevel: 'low' | 'medium' | 'high' }[];
+  symptomHistory: { 
+    date: string; 
+    symptoms: string[]; 
+    riskLevel: 'low' | 'medium' | 'high';
+    possibleConditions?: { condition: string; probability: number; description: string }[];
+  }[];
 }
 
 interface MLInsights {
@@ -501,4 +506,4 @@ export class AIAnalysisService {
   };
 }
 
-export const aiAnalysisService = AIAnalysisService.getInstance(); 
+export const aiAnalysisService = AIAnalysisService.getInstance();

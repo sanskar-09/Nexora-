@@ -1,3 +1,4 @@
+
 import React from 'react';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card";
 import { LineChart, Line, XAxis, YAxis, CartesianGrid, Tooltip, ResponsiveContainer, BarChart, Bar } from 'recharts';
@@ -39,19 +40,6 @@ const SymptomTrends: React.FC<SymptomTrendsProps> = ({ history, seasonalPattern,
 
   const { riskLevelData, symptomFrequency } = processData();
 
-  const getRiskLevelColor = (level: number) => {
-    switch (level) {
-      case 3:
-        return '#ef4444';
-      case 2:
-        return '#f59e0b';
-      case 1:
-        return '#22c55e';
-      default:
-        return '#6b7280';
-    }
-  };
-
   const months = [
     'Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun',
     'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'
@@ -70,6 +58,13 @@ const SymptomTrends: React.FC<SymptomTrendsProps> = ({ history, seasonalPattern,
     day,
     count: symptomOccurrenceByDay[index]
   })) : [];
+
+  // Custom dot component for the line chart
+  const CustomDot = (props: any) => {
+    const { cx, cy, payload } = props;
+    const color = payload.riskLevel === 3 ? '#ef4444' : payload.riskLevel === 2 ? '#f59e0b' : '#22c55e';
+    return <circle cx={cx} cy={cy} r={4} fill={color} />;
+  };
 
   return (
     <Card>
@@ -104,7 +99,7 @@ const SymptomTrends: React.FC<SymptomTrendsProps> = ({ history, seasonalPattern,
                     dataKey="riskLevel"
                     stroke="#8884d8"
                     strokeWidth={2}
-                    dot={{ fill: (data) => getRiskLevelColor(data.riskLevel) }}
+                    dot={<CustomDot />}
                   />
                 </LineChart>
               </ResponsiveContainer>
@@ -162,7 +157,7 @@ const SymptomTrends: React.FC<SymptomTrendsProps> = ({ history, seasonalPattern,
                       dataKey="risk"
                       stroke="#ff7300"
                       strokeWidth={2}
-                      dot={{ fill: (data) => getRiskLevelColor(data.risk) }}
+                      dot={<CustomDot />}
                     />
                   </LineChart>
                 </ResponsiveContainer>
@@ -191,4 +186,4 @@ const SymptomTrends: React.FC<SymptomTrendsProps> = ({ history, seasonalPattern,
   );
 };
 
-export default SymptomTrends; 
+export default SymptomTrends;
