@@ -1,9 +1,0 @@
-<svg width="1280" height="720" viewBox="0 0 1280 720" fill="none" xmlns="http://www.w3.org/2000/svg">
-  <rect width="1280" height="720" fill="#FDF2F8"/>
-  <rect x="440" y="160" width="400" height="400" rx="20" fill="#FCE7F3"/>
-  <circle cx="650" cy="320" r="120" fill="#EC4899" fill-opacity="0.1" stroke="#EC4899" stroke-width="8"/>
-  <path d="M590 320C590 286.863 616.863 260 650 260C683.137 260 710 286.863 710 320" stroke="#EC4899" stroke-width="8" stroke-linecap="round"/>
-  <circle cx="650" cy="320" r="40" fill="#EC4899" fill-opacity="0.2" stroke="#EC4899" stroke-width="4"/>
-  <path d="M650 380V460" stroke="#EC4899" stroke-width="8" stroke-linecap="round"/>
-  <text x="640" y="560" font-family="Arial" font-size="24" text-anchor="middle" fill="#9D174D">Breast Self-Examination</text>
-</svg>
